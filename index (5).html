@@ -1,0 +1,939 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0e0e12">
+<title>My Vault</title>
+<style>
+:root{--bg:#0e0e12;--txt:#eef0ff;--muted:#a2a2b5;--line:rgba(255,255,255,.09);--glass:rgba(78,78,97,.2);--glass2:rgba(78,78,97,.42);--a1:#ad7bff;--a2:#00fad9;--a3:#ff7966;--ok:#00fad9;--warn:#ffb199;--bad:#ff7966;--r:20px;--grad:linear-gradient(135deg,#ff8a75,#ff5f4a)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--txt);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color-scheme:dark;-webkit-font-smoothing:antialiased}
+body{overflow-x:hidden}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+h1,h2,h3,p{margin:0}
+.ic{flex:none;display:inline-block;vertical-align:middle}
+.num{font-variant-numeric:tabular-nums}
+.hide{display:none!important}
+
+/* ---------- ambient background ---------- */
+.aurora{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:radial-gradient(120% 70% at 50% -10%,#1d1b2e 0%,#0e0e12 65%)}
+.aurora i{position:absolute;width:62vmax;height:62vmax;border-radius:50%;filter:blur(90px);opacity:.42;mix-blend-mode:screen;animation:drift 22s ease-in-out infinite alternate}
+.aurora i:nth-child(1){background:#ff7966;left:-24vmax;top:-26vmax}
+.aurora i:nth-child(2){background:#00d9c0;right:-30vmax;top:14vh;animation-duration:28s;animation-delay:-6s;opacity:.3}
+.aurora i:nth-child(3){background:#ad7bff;left:-14vmax;bottom:-34vmax;animation-duration:32s;animation-delay:-10s;opacity:.26}
+@keyframes drift{0%{transform:translate(0,0) scale(1) rotate(0)}50%{transform:translate(8vmax,6vmax) scale(1.12) rotate(50deg)}100%{transform:translate(-6vmax,10vmax) scale(.96) rotate(110deg)}}
+.grain{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5;background-image:radial-gradient(1.2px 1.2px at 20px 30px,rgba(255,255,255,.8),transparent),radial-gradient(1px 1px at 90px 120px,rgba(190,240,255,.7),transparent),radial-gradient(1.2px 1.2px at 160px 60px,rgba(255,220,240,.7),transparent);background-size:220px 200px;animation:twinkle 6s ease-in-out infinite alternate}
+@keyframes twinkle{from{opacity:.2}to{opacity:.6}}
+
+/* ---------- layout ---------- */
+#app{position:relative;z-index:1;max-width:760px;margin:0 auto;padding:max(16px,env(safe-area-inset-top),var(--safe-area-inset-top,0px)) 16px 130px}
+html.ads #app{padding-bottom:210px}
+html.native #app{padding-top:max(26px,env(safe-area-inset-top),var(--safe-area-inset-top,0px))}
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.brandrow{display:flex;align-items:center;gap:12px}
+.logo{border-radius:14px;display:grid;place-items:center;background:var(--grad);color:#fff;box-shadow:0 8px 26px -8px rgba(255,121,102,.9),inset 0 1px 0 rgba(255,255,255,.35);flex:none}
+.hello{color:var(--muted);font-size:12.5px;letter-spacing:.2px}
+.brand{font-size:21px;font-weight:750;letter-spacing:-.4px;line-height:1.15}
+.brand.big{font-size:34px;text-align:center}
+.top-actions{display:flex;gap:8px}
+.icon-btn{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);transition:transform .18s,background .2s}
+.icon-btn:active{transform:scale(.9);background:var(--glass2)}
+.icon-btn.sm{width:36px;height:36px;border-radius:12px}
+.muted{color:var(--muted)}.sm{font-size:13px}
+.sec-head{display:flex;align-items:center;justify-content:space-between;margin:4px 0 14px}
+.sec-head h2{font-size:20px;font-weight:700;letter-spacing:-.3px}
+.sub-head{font-size:12px;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted);margin:20px 4px 10px;font-weight:600}
+.view{animation:fadein .35s ease both}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+
+/* ---------- cards ---------- */
+.card{position:relative;background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.04));border:1px solid var(--line);border-radius:var(--r);padding:18px;margin-bottom:12px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:0 14px 40px -22px rgba(0,0,0,.8),inset 0 1px 0 rgba(255,255,255,.08);animation:rise .6s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0)*60ms)}
+@keyframes rise{from{opacity:0;transform:translateY(18px) scale(.985)}to{opacity:1;transform:none}}
+.card.tap{cursor:pointer;transition:transform .18s}
+.card.tap:active{transform:scale(.985)}
+.hero{background:linear-gradient(145deg,rgba(255,121,102,.34),rgba(255,121,102,.12) 60%,rgba(224,80,158,.14));border-color:rgba(173,123,255,.35)}
+.hero::after{content:"";position:absolute;inset:0;border-radius:inherit;background:radial-gradient(60% 80% at 100% 0%,rgba(0,250,217,.18),transparent 70%);pointer-events:none}
+.hero-top{display:flex;align-items:center;justify-content:space-between;gap:12px;position:relative;z-index:1}
+.row{display:flex;align-items:center}.between{justify-content:space-between}.gap{gap:8px;flex-wrap:wrap;margin-top:14px}
+.title{font-size:17px;font-weight:650;letter-spacing:-.2px}
+.lbl{font-size:11px;text-transform:uppercase;letter-spacing:1.3px;color:var(--muted);font-weight:600}
+.big{font-size:32px;font-weight:780;letter-spacing:-1px;line-height:1.1;margin-top:6px;background:linear-gradient(90deg,#fff,#cfc8ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.stats3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line);position:relative;z-index:1}
+.stats3 b{display:block;font-size:14px;margin-top:4px;font-weight:650}
+.ring{flex:none;filter:drop-shadow(0 0 12px rgba(255,121,102,.5))}
+.ring .arc{transition:stroke-dashoffset 1.4s cubic-bezier(.3,.9,.3,1)}
+.ring text{fill:#fff;font-weight:750;font-size:21px;font-family:inherit}
+.amt-row{display:flex;justify-content:space-between;margin:14px 0 10px}
+.amt-row .r{text-align:right}
+.amt{font-size:22px;font-weight:750;letter-spacing:-.4px;margin-top:3px}.ok{color:var(--ok)}
+.bar{height:8px;border-radius:99px;background:rgba(255,255,255,.09);overflow:hidden}
+.bar b{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--a2),var(--a1),var(--a3));background-size:200% 100%;transition:width 1.3s cubic-bezier(.3,.9,.3,1);position:relative;animation:flow2 4s linear infinite}
+.bar b::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);transform:translateX(-100%);animation:shine 2.4s ease-in-out infinite}
+@keyframes flow2{to{background-position:200% 0}}
+@keyframes shine{to{transform:translateX(100%)}}
+.meta{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+.pill{font-size:12px;padding:5px 10px;border-radius:99px;background:rgba(255,255,255,.07);border:1px solid var(--line);color:#d6d9f5}
+.badge{font-size:11.5px;font-weight:700;padding:5px 10px;border-radius:99px;background:rgba(173,123,255,.2);border:1px solid rgba(173,123,255,.5);color:#d4ceff;white-space:nowrap}
+.badge.ok{background:rgba(61,220,151,.14);border-color:rgba(61,220,151,.5);color:var(--ok)}
+.badge.warn{background:rgba(255,200,87,.14);border-color:rgba(255,200,87,.5);color:var(--warn)}
+.badge.bad{background:rgba(255,107,129,.14);border-color:rgba(255,107,129,.5);color:var(--bad)}
+.card.done{opacity:.82}
+.chip-ic{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;flex:none;background:linear-gradient(135deg,rgba(173,123,255,.28),rgba(0,250,217,.14));border:1px solid rgba(173,123,255,.38);color:#d0caff}
+.chip-ic.sm{width:36px;height:36px;border-radius:12px}
+.chip-ic.ok{background:rgba(61,220,151,.14);border-color:rgba(61,220,151,.4);color:var(--ok)}
+.chip-ic.warn{background:rgba(255,200,87,.14);border-color:rgba(255,200,87,.4);color:var(--warn)}
+.chip-ic.pink{background:rgba(255,107,129,.14);border-color:rgba(255,107,129,.4);color:#ff9bb0}
+
+/* ---------- buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:12px 18px;border-radius:14px;font-weight:650;font-size:14.5px;background:var(--glass2);border:1px solid var(--line);transition:transform .15s,filter .2s}
+.btn:active{transform:scale(.95)}
+.btn.sm{padding:9px 13px;font-size:13.5px;border-radius:12px}
+.btn.primary{border:0;background:var(--grad);color:#fff;box-shadow:0 10px 26px -10px rgba(255,121,102,.9),inset 0 1px 0 rgba(255,255,255,.3)}
+.btn.ghost{background:transparent}
+.btn.danger{background:rgba(255,107,129,.12);border-color:rgba(255,107,129,.45);color:var(--bad)}
+.btn.wide{width:100%;margin-top:6px}
+.btn[disabled]{opacity:.55}
+.mini{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;background:rgba(255,255,255,.08);border:1px solid var(--line);flex:none;color:#cfd2f0}
+.mini:active{transform:scale(.86)}.mini.bad{color:var(--bad)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:99px;background:var(--glass);border:1px solid var(--line);font-size:13.5px;color:#c9cdee;transition:all .2s}
+.chip.on{background:var(--grad);border-color:transparent;color:#fff;box-shadow:0 8px 20px -8px rgba(255,121,102,.8)}
+.search{display:flex;align-items:center;gap:10px;padding:0 14px;border-radius:14px;background:var(--glass);border:1px solid var(--line);margin-bottom:12px;color:var(--muted)}
+.search input{border:0;background:transparent;padding:13px 0;box-shadow:none!important}
+
+/* ---------- home ---------- */
+.actions{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+.act{display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 6px;border-radius:18px;background:var(--glass);border:1px solid var(--line);font-size:12.5px;font-weight:600;color:#d9dcf7;transition:transform .18s;animation:rise .6s both;animation-delay:calc(var(--i,0)*60ms)}
+.act:active{transform:scale(.93)}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+.tile-s{padding:14px 10px;border-radius:18px;background:var(--glass);border:1px solid var(--line);animation:rise .6s both;animation-delay:calc(var(--i,0)*60ms);transition:transform .18s}
+.tile-s:active{transform:scale(.95)}
+.tile-s b{display:block;font-size:24px;margin-top:10px;font-weight:750;letter-spacing:-.5px}
+.tile-s .t{font-size:12px;color:var(--muted)}
+.chk{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line);font-size:14px}
+.chk:first-of-type{border-top:0}
+.chk .v{margin-left:auto;font-weight:650;font-size:13px}
+.alert{display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:16px;margin-bottom:10px;background:rgba(255,200,87,.08);border:1px solid rgba(255,200,87,.3)}
+.alert.bad{background:rgba(255,107,129,.08);border-color:rgba(255,107,129,.35)}
+.chart{display:flex;align-items:flex-end;justify-content:space-between;gap:8px;height:140px;margin-top:14px}
+.chart .col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%}
+.chart .val{font-size:10.5px;color:var(--muted);height:14px}
+.chart .barv{flex:1;width:100%;display:flex;align-items:flex-end;justify-content:center}
+.chart .barv i{display:block;width:70%;max-width:34px;min-height:4px;border-radius:9px 9px 4px 4px;background:linear-gradient(180deg,var(--a2),var(--a1));transition:height 1.1s cubic-bezier(.3,.9,.3,1);box-shadow:0 0 18px -4px rgba(0,250,217,.6)}
+.chart .col span{font-size:11px;color:var(--muted)}
+.empty{text-align:center;padding:34px 20px;color:var(--muted)}
+.empty .eic{width:68px;height:68px;margin:0 auto 14px;border-radius:22px;display:grid;place-items:center;background:linear-gradient(135deg,rgba(173,123,255,.25),rgba(0,250,217,.12));border:1px solid rgba(173,123,255,.35);color:#cfc9ff;animation:float 4s ease-in-out infinite}
+@keyframes float{50%{transform:translateY(-6px)}}
+.empty h3{color:var(--txt);margin-bottom:6px;font-size:17px}
+
+/* ---------- photos ---------- */
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tile{position:relative;aspect-ratio:1;border-radius:16px;overflow:hidden;background:rgba(255,255,255,.05);border:1px solid var(--line);cursor:pointer;animation:rise .5s both;animation-delay:calc(var(--i,0)*30ms);transition:transform .18s}
+.tile:active{transform:scale(.94)}
+.tile img{width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .5s}
+.tile img.loaded{opacity:1}
+.tile.locked{display:flex;align-items:center;justify-content:center;color:#d0caff;background:linear-gradient(135deg,rgba(255,121,102,.32),rgba(224,80,158,.24))}
+.tile.locked::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.2),transparent 70%);transform:translateX(-100%);animation:shine 2.8s infinite}
+.pv{position:absolute;top:6px;right:6px;display:grid;place-items:center;width:24px;height:24px;background:rgba(14,14,18,.7);border-radius:8px;color:#fff}
+
+/* ---------- vault items ---------- */
+.seg{display:flex;padding:4px;border-radius:16px;background:var(--glass);border:1px solid var(--line);margin-bottom:14px}
+.seg button{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:11px;border-radius:12px;font-weight:650;font-size:14px;color:var(--muted);transition:all .25s}
+.seg button.on{color:#fff;background:var(--grad);box-shadow:0 8px 20px -8px rgba(255,121,102,.8)}
+.secr{display:flex;align-items:center;gap:8px;padding:9px 0;border-top:1px solid var(--line)}
+.secr .sl{font-size:12px;color:var(--muted);width:90px;flex:none}
+.secr .sv{flex:1;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13.5px;word-break:break-all}
+.kv{display:flex;gap:8px;padding:9px 0;border-top:1px solid var(--line);font-size:14px}
+.kv .sl{font-size:12px;color:var(--muted);width:90px;flex:none;padding-top:1px}
+.kv .sv{flex:1;word-break:break-word}
+
+/* ---------- bottom nav ---------- */
+.nav{position:fixed;z-index:20;left:50%;transform:translateX(-50%);bottom:max(14px,env(safe-area-inset-bottom),var(--safe-area-inset-bottom,0px));width:min(94vw,500px);display:flex;padding:6px;border-radius:24px;background:rgba(28,28,35,.94);border:1px solid var(--line);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);box-shadow:0 20px 50px -14px rgba(0,0,0,.85)}
+.nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 0 8px;border-radius:18px;font-size:10.5px;font-weight:600;color:var(--muted);transition:all .3s}
+.nav button .ic{transition:transform .35s cubic-bezier(.3,1.7,.5,1)}
+.nav button.on{color:#fff;background:linear-gradient(135deg,rgba(255,121,102,.55),rgba(255,121,102,.3));box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 0 24px -6px rgba(255,121,102,.9)}
+.nav button.on .ic{transform:translateY(-2px) scale(1.12)}
+
+/* ---------- modal ---------- */
+.modal{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.62);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:flex-end;justify-content:center;opacity:0;transition:opacity .25s}
+.modal.open{opacity:1}
+.sheet{width:100%;max-width:640px;max-height:92vh;overflow:auto;background:linear-gradient(180deg,#1f1f28,#14141b);border:1px solid var(--line);border-bottom:0;border-radius:26px 26px 0 0;padding:10px 18px calc(24px + env(safe-area-inset-bottom));transform:translateY(100%);transition:transform .35s cubic-bezier(.2,.9,.25,1)}
+.modal.open .sheet{transform:none}
+.grab{width:42px;height:4px;border-radius:9px;background:rgba(255,255,255,.22);margin:4px auto 12px}
+.sh-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.sh-head h2{font-size:19px;font-weight:700;letter-spacing:-.3px}
+.f{display:block;margin-bottom:12px}
+.f>span{display:block;font-size:11.5px;color:var(--muted);margin:0 0 6px 3px;text-transform:uppercase;letter-spacing:1.1px;font-weight:600}
+input,select,textarea{width:100%;padding:13px 14px;border-radius:13px;border:1px solid var(--line);background:rgba(255,255,255,.07);color:#fff;font:inherit;outline:none;transition:border .2s,box-shadow .2s}
+input:focus,select:focus,textarea:focus{border-color:var(--a2);box-shadow:0 0 0 3px rgba(0,250,217,.18)}
+option{color:#111}
+input[type=file]{padding:10px}
+.pwrow{display:flex;gap:8px;align-items:center}
+.meter{height:4px;border-radius:9px;background:rgba(255,255,255,.1);margin-top:8px;overflow:hidden}
+.meter i{display:block;height:100%;width:0;border-radius:9px;transition:width .3s,background .3s;background:var(--bad)}
+.meter[data-s="2"] i{background:var(--warn)}.meter[data-s="3"] i{background:#9be15d}.meter[data-s="4"] i{background:var(--ok)}
+.list .li{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line)}
+.atts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0}
+.att{position:relative;aspect-ratio:1;border-radius:14px;overflow:hidden;background:rgba(255,255,255,.06);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:11.5px;text-align:center;padding:8px;word-break:break-all;cursor:pointer;color:#cfd2f0}
+.att img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .4s}.att img.loaded{opacity:1}
+.att .x{position:absolute;top:5px;right:5px;z-index:2;background:rgba(14,14,18,.75);border-radius:9px;width:26px;height:26px;display:grid;place-items:center}
+.srow{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.srow:first-child{border-top:0}
+.srow .st{flex:1;min-width:0}.srow .st b{display:block;font-size:14.5px;font-weight:650}.srow .st span{font-size:12.5px;color:var(--muted)}
+.group{background:var(--glass);border:1px solid var(--line);border-radius:18px;padding:4px 14px;margin-bottom:14px}
+
+/* ---------- viewer ---------- */
+.viewer{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.95);display:flex;flex-direction:column;animation:fadein .25s}
+.viewer .vt{display:flex;justify-content:space-between;align-items:center;padding:max(14px,env(safe-area-inset-top),var(--safe-area-inset-top,0px)) 14px 8px}
+.viewer .vb{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:8px;gap:6px}
+.viewer img{max-width:100%;max-height:100%;border-radius:14px;box-shadow:0 24px 70px -12px rgba(255,121,102,.5);animation:rise .5s both}
+.viewer .vf{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;padding:12px 14px calc(18px + env(safe-area-inset-bottom),var(--safe-area-inset-bottom,0px))}
+
+/* ---------- lock screen ---------- */
+.lock{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:20px 0}
+.lock p{max-width:320px}
+.orb{width:128px;height:128px;border-radius:50%;padding:3px;background:conic-gradient(from 0deg,#ff7966,#ff5f4a,#ad7bff,#ffc857,#ff7966);animation:spin 6s linear infinite;box-shadow:0 0 60px rgba(255,121,102,.55),0 0 120px rgba(255,121,102,.25);margin-bottom:10px}
+.orb-in{width:100%;height:100%;border-radius:50%;background:#14141b;display:grid;place-items:center;color:#d6d0ff;animation:unspin 6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}@keyframes unspin{to{transform:rotate(-360deg)}}
+.lock-form{width:min(86vw,340px);display:flex;flex-direction:column;gap:10px;margin-top:8px}
+.lock-form input{text-align:center;font-size:16px;padding:15px}
+.err{color:var(--bad);min-height:20px;font-size:13.5px}
+.shake{animation:shake .45s}
+@keyframes shake{20%,60%{transform:translateX(-9px)}40%,80%{transform:translateX(9px)}}
+.check{display:flex;gap:10px;align-items:flex-start;text-align:left;font-size:13px;color:var(--muted)}
+.check input{width:20px;height:20px;margin-top:2px;flex:none}
+.fp{position:relative;width:92px;height:92px;border-radius:50%;display:grid;place-items:center;color:#fff;background:var(--grad);box-shadow:0 14px 40px -10px rgba(255,121,102,.9);margin:6px 0 4px;transition:transform .2s}
+.fp:active{transform:scale(.92)}
+.fp .pr{position:absolute;inset:0;border-radius:50%;border:2px solid rgba(0,250,217,.7);animation:pulse 2.4s ease-out infinite}
+.fp .pr.p2{animation-delay:1.2s}
+@keyframes pulse{0%{transform:scale(1);opacity:.9}100%{transform:scale(1.9);opacity:0}}
+.toast{position:fixed;z-index:99;left:50%;bottom:104px;transform:translateX(-50%);background:rgba(40,40,52,.97);border:1px solid var(--line);padding:12px 18px;border-radius:14px;font-size:14px;animation:toast 2.8s both;max-width:90vw;text-align:center;backdrop-filter:blur(12px);box-shadow:0 16px 40px -12px rgba(0,0,0,.8)}
+@keyframes toast{0%{opacity:0;transform:translate(-50%,14px)}10%,85%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,-8px)}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
+/* ---------- Trackizer-style theme ---------- */
+.aurora{background:radial-gradient(120% 60% at 50% -10%,#221f33 0%,#0e0e12 62%)}
+.aurora i{opacity:.26;filter:blur(100px)}
+.aurora i:nth-child(1){background:#ff6a55}
+.aurora i:nth-child(2){background:#7a4dff;opacity:.24}
+.aurora i:nth-child(3){background:#00d9c0;opacity:.14}
+.card{background:linear-gradient(180deg,rgba(78,78,97,.26),rgba(78,78,97,.1));border-color:rgba(255,255,255,.1);border-radius:22px}
+.hero{background:linear-gradient(180deg,rgba(78,78,97,.34),rgba(28,28,35,.5));border-color:rgba(255,255,255,.12);overflow:hidden}
+.hero::after{background:radial-gradient(70% 70% at 50% 0%,rgba(255,121,102,.2),transparent 70%)}
+.gaugewrap{position:relative;width:260px;height:131px;margin:4px auto 0;z-index:1}
+.gaugewrap svg{display:block}
+.gin{position:absolute;left:0;right:0;bottom:2px;text-align:center}
+.gin .big{font-size:30px;margin-top:2px;background:none;color:#fff;-webkit-text-fill-color:#fff}
+.stats3{text-align:center}
+.chip-ic{background:rgba(78,78,97,.38);border-color:rgba(255,255,255,.12);color:#d3d2dc}
+.chip-ic.ok{background:rgba(0,250,217,.1);border-color:rgba(0,250,217,.35);color:var(--ok)}
+.chip-ic.pink{background:rgba(255,121,102,.12);border-color:rgba(255,121,102,.4);color:#ffa699}
+.btn.primary,.chip.on,.seg button.on{background:var(--grad);box-shadow:0 10px 24px -10px rgba(255,121,102,.85),inset 0 1px 0 rgba(255,255,255,.3)}
+.badge{background:rgba(173,123,255,.16);border-color:rgba(173,123,255,.45);color:#d9c4ff}
+.badge.ok{background:rgba(0,250,217,.12);border-color:rgba(0,250,217,.45);color:var(--ok)}
+.badge.warn{background:rgba(255,177,153,.12);border-color:rgba(255,177,153,.45);color:var(--warn)}
+.alert{background:rgba(255,177,153,.07);border-color:rgba(255,177,153,.3)}
+.chart .barv i{background:linear-gradient(180deg,#ff8a75,#ff5f4a);box-shadow:0 0 18px -4px rgba(255,121,102,.6)}
+.act,.tile-s,.group,.search,.chip{background:rgba(78,78,97,.2)}
+.nav{background:rgba(28,28,35,.94);border-radius:30px;padding:6px 8px;align-items:center;width:min(94vw,520px)}
+.nav button{border-radius:16px;padding:9px 0 7px}
+.nav button.on{background:rgba(255,255,255,.07);box-shadow:none;color:#fff}
+.nav button.on .ic{color:#ff7966;transform:translateY(-1px) scale(1.1)}
+.nav .fab{flex:none;width:56px;height:56px;border-radius:50%;padding:0;margin:-30px 6px 0;justify-content:center;align-items:center;color:#fff;background:var(--grad);box-shadow:0 12px 28px -8px rgba(255,121,102,.9),0 0 0 5px #0e0e12,inset 0 1px 0 rgba(255,255,255,.35)}
+.nav .fab:active{transform:scale(.92)}
+.qgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.qa{display:flex;flex-direction:column;align-items:center;gap:10px;padding:18px 8px;border-radius:18px;background:rgba(78,78,97,.22);border:1px solid var(--line);font-weight:650;font-size:14px}
+.qa:active{transform:scale(.96)}
+.sheet{background:linear-gradient(180deg,#25252f,#14141b)}
+.logo{box-shadow:0 8px 26px -8px rgba(255,121,102,.9),inset 0 1px 0 rgba(255,255,255,.35)}
+
+/* ---------- splash animation ---------- */
+#splash{position:fixed;inset:0;z-index:200;background:#0e0e12;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:30px;padding:24px;overflow:hidden;transition:opacity .5s}
+#splash.out{opacity:0;pointer-events:none}
+.sp-glow{position:absolute;left:50%;top:50%;width:440px;height:440px;border-radius:50%;background:radial-gradient(circle,rgba(255,121,102,.24),rgba(173,123,255,.1) 45%,transparent 70%);animation:spglow 3s ease-in-out infinite alternate}
+@keyframes spglow{from{transform:translate(-50%,-62%) scale(.88);opacity:.6}to{transform:translate(-50%,-62%) scale(1.1);opacity:1}}
+.sp-vault{position:relative;z-index:1;animation:spin1 .8s cubic-bezier(.2,.9,.3,1) both,spshine 1.2s ease 2.5s 1}
+@keyframes spin1{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
+@keyframes spshine{50%{filter:drop-shadow(0 0 22px rgba(255,121,102,.75))}}
+.sp-vault *{transform-box:view-box}
+.sp-ring{stroke-dasharray:1;stroke-dashoffset:1;transform:rotate(-90deg);transform-origin:100px 100px;animation:spdraw 1.2s ease .15s forwards}
+@keyframes spdraw{to{stroke-dashoffset:0}}
+.sp-wheel{transform-origin:100px 100px;animation:spwheel 1.8s cubic-bezier(.15,.7,.2,1) .45s both}
+@keyframes spwheel{from{transform:rotate(-600deg);opacity:0}12%{opacity:1}to{transform:rotate(0);opacity:1}}
+.sp-bolt{transform-box:fill-box;transform-origin:center;animation:spbolt .45s cubic-bezier(.3,1.6,.5,1) both}
+@keyframes spbolt{from{opacity:0;transform:scaleY(.1)}to{opacity:1;transform:none}}
+.sp-pop{transform-origin:100px 100px;animation:sppop .6s cubic-bezier(.3,1.5,.5,1) 2.45s both}
+@keyframes sppop{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+.sp-sh{animation:spsh .5s ease 2.95s both}
+@keyframes spsh{from{transform:translateY(-6px)}to{transform:none}}
+.sp-pulse{transform-origin:100px 100px;opacity:0;animation:sppulse 1s ease-out 3s 1}
+@keyframes sppulse{from{transform:scale(1);opacity:.8}to{transform:scale(4.2);opacity:0}}
+.sp-text{position:relative;z-index:1;max-width:320px;text-align:center;font-size:21px;font-weight:650;line-height:1.45;letter-spacing:-.2px;color:#fff;margin:0}
+.sp-text span{display:inline-block;margin:0 .14em;opacity:0;transform:translateY(14px);filter:blur(6px);animation:spword .7s cubic-bezier(.2,.9,.3,1) both;animation-delay:calc(2.2s + var(--w)*.11s)}
+.sp-text .hl{background:linear-gradient(90deg,#ff8a75,#ad7bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+@keyframes spword{to{opacity:1;transform:none;filter:blur(0)}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+<symbol id="i-card" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20M6 15h4"/></symbol>
+<symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></symbol>
+<symbol id="i-idcard" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="3"/><circle cx="8.5" cy="11" r="2"/><path d="M5.5 16c.6-1.5 1.7-2 3-2s2.4.5 3 2M14.5 10h4M14.5 14h3"/></symbol>
+<symbol id="i-book" viewBox="0 0 24 24"><path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5z"/><path d="M5 19.5A1.5 1.5 0 0 0 6.5 21H19v-3"/><circle cx="12" cy="9.5" r="2.5"/><path d="M9.5 14h5"/></symbol>
+<symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18"/></symbol>
+<symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+<symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3.5"/><circle cx="9" cy="9" r="1.8"/><path d="m21 15-4.5-4.5L6 21"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="10.5" width="16" height="10.5" rx="3"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/><circle cx="12" cy="15.7" r="1.2"/></symbol>
+<symbol id="i-unlock" viewBox="0 0 24 24"><rect x="4" y="10.5" width="16" height="10.5" rx="3"/><path d="M8 10.5V8a4 4 0 0 1 7.6-1.7"/></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 4.5 6v5.5c0 4.6 3.1 8.1 7.5 9.5 4.4-1.4 7.5-4.9 7.5-9.5V6z"/><path d="m9 12 2.2 2.2L15.5 10"/></symbol>
+<symbol id="i-vault" viewBox="0 0 24 24"><path d="M12 3 4.5 6v5.5c0 4.6 3.1 8.1 7.5 9.5 4.4-1.4 7.5-4.9 7.5-9.5V6z"/><rect x="9" y="11" width="6" height="4.5" rx="1.2"/><path d="M10.2 11V9.6a1.8 1.8 0 0 1 3.6 0V11"/></symbol>
+<symbol id="i-finger" viewBox="0 0 24 24"><path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4M14 13.12c0 2.38 0 6.38-1 8.88M17.29 21.02c.12-.6.43-2.3.5-3.02M2 12a10 10 0 0 1 18-6M21.8 16c.2-2 .131-5.354 0-6M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2M8.65 22c.21-.66.45-1.32.57-2M9 6.8a6 6 0 0 1 9 5.2v2"/></symbol>
+<symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m3.5 7.5 8.5 6 8.5-6"/></symbol>
+<symbol id="i-bank" viewBox="0 0 24 24"><path d="M3 9.5 12 4l9 5.5M5 10.5v7M9.5 10.5v7M14.5 10.5v7M19 10.5v7M3 20.5h18"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2.5"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></symbol>
+<symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></symbol>
+<symbol id="i-share" viewBox="0 0 24 24"><path d="M12 15V3M8 7l4-4 4 4M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></symbol>
+<symbol id="i-down" viewBox="0 0 24 24"><path d="M12 4v11m0 0-4-4m4 4 4-4M5 20h14"/></symbol>
+<symbol id="i-up" viewBox="0 0 24 24"><path d="M12 15V4m0 0L8 8m4-4 4 4M5 20h14"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4 2.5 20h19z"/><path d="M12 10v4M12 17.5h.01"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5 10 17.5 19 7"/></symbol>
+<symbol id="i-dice" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M8 8h.01M16 8h.01M8 16h.01M16 16h.01M12 12h.01"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+<symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/><path d="m13.5 6.5 4 4"/></symbol>
+<symbol id="i-history" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></symbol>
+<symbol id="i-key" viewBox="0 0 24 24"><circle cx="7.5" cy="15.5" r="3.5"/><path d="m10 13 10-10M16 7l3 3"/></symbol>
+<symbol id="i-trend" viewBox="0 0 24 24"><path d="M3 17 9 11l4 4 8-8M15 7h6v6"/></symbol>
+<symbol id="i-left" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></symbol>
+<symbol id="i-right" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+<symbol id="i-wallet" viewBox="0 0 24 24"><path d="M4 7a2 2 0 0 1 2-2h11v3"/><rect x="3" y="7" width="18" height="13" rx="3"/><path d="M16 13.5h.01"/></symbol>
+</defs></svg>
+<div class="aurora"><i></i><i></i><i></i></div>
+<div class="grain"></div>
+<div id="app"></div>
+<div id="splash"><div class="sp-glow"></div>
+<svg class="sp-vault" viewBox="0 0 200 200" width="200" height="200" aria-hidden="true"><defs><linearGradient id="spg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff8a75"/><stop offset="1" stop-color="#ad7bff"/></linearGradient><radialGradient id="spd" cx=".5" cy=".4" r=".7"><stop offset="0" stop-color="#30303d"/><stop offset="1" stop-color="#16161e"/></radialGradient></defs>
+<circle class="sp-ring" cx="100" cy="100" r="92" fill="none" stroke="url(#spg)" stroke-width="5" stroke-linecap="round" pathLength="1"/>
+<circle cx="100" cy="100" r="84" fill="url(#spd)" stroke="rgba(255,255,255,.08)"/>
+<g transform="rotate(0 100 100)"><rect class="sp-bolt" x="94" y="17" width="12" height="15" rx="4" fill="#ff7966" style="animation-delay:2.10s"/></g><g transform="rotate(45 100 100)"><rect class="sp-bolt" x="94" y="17" width="12" height="15" rx="4" fill="#ff7966" style="animation-delay:2.15s"/></g><g transform="rotate(90 100 100)"><rect class="sp-bolt" x="94" y="17" width="12" height="15" rx="4" fill="#ff7966" style="animation-delay:2.20s"/></g><g transform="rotate(135 100 100)"><rect class="sp-bolt" x="94" y="17" width="12" height="15" rx="4" fill="#ff7966" style="animation-delay:2.25s"/></g><g transform="rotate(180 100 100)"><rect class="sp-bolt" x="94" y="17" width="12" height="15" rx="4" fill="#ff7966" style="animation-delay:2.30s"/></g><g transform="rotate(225 100 100)"><rect class="sp-bolt" x="94" y="17" width="12" height="15" rx="4" fill="#ff7966" style="animation-delay:2.35s"/></g><g transform="rotate(270 100 100)"><rect class="sp-bolt" x="94" y="17" width="12" height="15" rx="4" fill="#ff7966" style="animation-delay:2.40s"/></g><g transform="rotate(315 100 100)"><rect class="sp-bolt" x="94" y="17" width="12" height="15" rx="4" fill="#ff7966" style="animation-delay:2.45s"/></g>
+<g class="sp-wheel"><circle cx="100" cy="100" r="50" fill="none" stroke="#c9c8d4" stroke-width="4" opacity=".55"/><g transform="rotate(0 100 100)"><line x1="100" y1="100" x2="100" y2="50" stroke="#c9c8d4" stroke-width="5" stroke-linecap="round"/><circle cx="100" cy="46" r="6" fill="#ffa699"/></g><g transform="rotate(60 100 100)"><line x1="100" y1="100" x2="100" y2="50" stroke="#c9c8d4" stroke-width="5" stroke-linecap="round"/><circle cx="100" cy="46" r="6" fill="#ffa699"/></g><g transform="rotate(120 100 100)"><line x1="100" y1="100" x2="100" y2="50" stroke="#c9c8d4" stroke-width="5" stroke-linecap="round"/><circle cx="100" cy="46" r="6" fill="#ffa699"/></g><g transform="rotate(180 100 100)"><line x1="100" y1="100" x2="100" y2="50" stroke="#c9c8d4" stroke-width="5" stroke-linecap="round"/><circle cx="100" cy="46" r="6" fill="#ffa699"/></g><g transform="rotate(240 100 100)"><line x1="100" y1="100" x2="100" y2="50" stroke="#c9c8d4" stroke-width="5" stroke-linecap="round"/><circle cx="100" cy="46" r="6" fill="#ffa699"/></g><g transform="rotate(300 100 100)"><line x1="100" y1="100" x2="100" y2="50" stroke="#c9c8d4" stroke-width="5" stroke-linecap="round"/><circle cx="100" cy="46" r="6" fill="#ffa699"/></g></g>
+<circle class="sp-pulse" cx="100" cy="100" r="20" fill="none" stroke="#ff7966" stroke-width="3"/>
+<g class="sp-pop"><circle cx="100" cy="100" r="22" fill="url(#spg)"/><path class="sp-sh" d="M94 100v-5a6 6 0 0 1 12 0v5" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/><rect x="91" y="99" width="18" height="14" rx="3.5" fill="#fff"/></g></svg>
+<p class="sp-text"><span class="" style="--w:0">Your</span><span class="" style="--w:1">life's</span><span class="" style="--w:2">important</span><span class="" style="--w:3">stuff,</span><span class="hl" style="--w:4">locked</span><span class="" style="--w:5">in your</span><span class="" style="--w:6">pocket</span><span class="hl" style="--w:7">vault</span></p></div>
+
+<script>
+'use strict';
+/* =========================================================
+   My Vault — private, offline, encrypted on this device.
+   Data is sealed with a random AES-256 key; that key is itself
+   wrapped by your passcode (PBKDF2, 250k rounds). In the Android
+   app, your fingerprint releases the passcode from the phone's
+   secure keystore. No server. No tracking.
+   ========================================================= */
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+const todayStr=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const fdate=s=>s?new Date(s+'T00:00:00').toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):'—';
+const enc=new TextEncoder(),dec=new TextDecoder();
+const ic=(n,s=20)=>`<svg class="ic" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-${n}"/></svg>`;
+
+/* ---------- native bridge (Android app) ---------- */
+const NATIVE=!!(window.Capacitor&&typeof window.Capacitor.isNativePlatform==='function'&&window.Capacitor.isNativePlatform());
+const plug=n=>{try{if(window.Capacitor.Plugins&&window.Capacitor.Plugins[n])return window.Capacitor.Plugins[n]}catch(e){}try{return window.Capacitor.registerPlugin(n)}catch(e){return null}};
+const Bio=NATIVE?plug('NativeBiometric'):null,FS=NATIVE?plug('Filesystem'):null,ShareP=NATIVE?plug('Share'):null,AppP=NATIVE?plug('App'):null,SB=NATIVE?plug('StatusBar'):null;
+if(NATIVE)document.documentElement.classList.add('native');
+const BIO_SERVER='com.myvault.app';
+
+let DB,KEY=null,S=null,tab='home',vaultSeg='emails',docFilter='All',photosUnlocked=false,idleTimer=null,hiddenAt=0,noLockUntil=0,rid=0,bioOn=false,bioOK=false;
+const urlCache=new Map();
+const acts={},forms={};
+const defaults=()=>({debts:[],docs:[],photos:[],emails:[],banks:[],settings:{currency:'RM',autolock:3,bglock:30}});
+const fmt=n=>((S&&S.settings&&S.settings.currency)||'RM')+' '+Number(n||0).toLocaleString('en-MY',{maximumFractionDigits:2});
+/* ---------- ads + lifetime Pro ---------- */
+const ADMOB_TEST=true; /* set to false before you publish */
+const ADMOB_BANNER_ID='ca-app-pub-3940256099942544/6300978111'; /* Google TEST banner: replace with your own ad unit ID */
+const RC_API_KEY='YOUR_REVENUECAT_ANDROID_KEY'; /* from RevenueCat */
+const PRO_ENTITLEMENT='pro';
+const AD_TABS=['home','debts']; /* ads never show on Docs, Photos or Vault tabs, or on the lock screen */
+const AdM=NATIVE?plug('AdMob'):null,RC=NATIVE?plug('Purchases'):null;
+let PRO=false,adsReady=false,bannerOn=false;
+try{PRO=localStorage.getItem('mv_pro')==='1'}catch(e){}
+function setPro(v){PRO=!!v;try{localStorage.setItem('mv_pro',v?'1':'0')}catch(e){}if(PRO)hideAds();if(KEY)renderApp()}
+async function syncAds(){
+  if(!AdM||!adsReady)return;
+  const want=!PRO&&!!KEY&&AD_TABS.includes(tab);
+  try{
+    if(want&&!bannerOn){bannerOn=true;document.documentElement.classList.add('ads');await AdM.showBanner({adId:ADMOB_BANNER_ID,adSize:'ADAPTIVE_BANNER',position:'BOTTOM_CENTER',margin:92,isTesting:ADMOB_TEST})}
+    else if(!want&&bannerOn){bannerOn=false;document.documentElement.classList.remove('ads');await AdM.removeBanner()}
+  }catch(e){bannerOn=false}
+}
+function hideAds(){if(bannerOn&&AdM){bannerOn=false;document.documentElement.classList.remove('ads');AdM.removeBanner().catch(()=>{})}}
+async function initMonetize(){
+  if(!NATIVE)return;
+  try{if(RC){await RC.configure({apiKey:RC_API_KEY});const r=await RC.getCustomerInfo();setPro(!!r.customerInfo.entitlements.active[PRO_ENTITLEMENT])}}catch(e){}
+  if(PRO||!AdM)return;
+  try{
+    await AdM.initialize({initializeForTesting:ADMOB_TEST});
+    const ci=await AdM.requestConsentInfo();
+    if(ci&&ci.isConsentFormAvailable&&ci.status==='REQUIRED')await AdM.showConsentForm();
+    adsReady=true;syncAds();
+  }catch(e){}
+}
+const proBtn=()=>(!NATIVE||PRO)?'':`<button class="icon-btn" data-act="pro" aria-label="Go Pro" style="width:auto;padding:0 13px;font-weight:750;font-size:12.5px;letter-spacing:.6px;background:var(--grad);border:0;color:#fff">PRO</button>`;
+const proCard=()=>!NATIVE?'':PRO
+  ?`<div class="card" style="--i:8"><div class="row" style="gap:12px"><span class="chip-ic sm ok">${ic('shield',18)}</span><div><div class="title" style="font-size:15.5px">My Vault Pro</div><div class="muted sm">Lifetime · ads removed</div></div></div></div>`
+  :`<div class="card tap" style="--i:8" data-act="pro"><div class="row between"><div class="row" style="gap:12px"><span class="chip-ic sm">${ic('shield',18)}</span><div><div class="title" style="font-size:15.5px">Go Pro</div><div class="muted sm">Remove all ads, one payment, forever</div></div></div><span class="badge">Upgrade</span></div></div>`;
+acts.pro=async()=>{
+  let price='';
+  try{if(RC){const o=await RC.getOfferings();const p=o.current&&o.current.lifetime;if(p&&p.product)price=p.product.priceString}}catch(e){}
+  openModal('My Vault Pro',`<div style="display:grid;gap:12px;margin-bottom:18px">${[['No ads, ever','All banner ads are removed from every screen'],['Pay once, yours forever','Lifetime access. No subscription and no renewals'],['Restore anytime','Reinstall or switch phones with the same Google account'],['Support My Vault','Helps keep the app maintained and updated']].map(x=>`<div class="row" style="gap:12px"><span class="chip-ic sm ok">${ic('shield',16)}</span><div><b>${x[0]}</b><div class="muted sm">${x[1]}</div></div></div>`).join('')}</div><button class="btn primary wide" data-act="buypro">Buy lifetime${price?' · '+esc(price):''}</button><button class="btn wide" data-act="restorepro">Restore purchase</button>`);
+};
+acts.buypro=async()=>{
+  if(!RC)return toast('Purchases work in the Android app only');
+  try{
+    const o=await RC.getOfferings();const pkg=o.current&&(o.current.lifetime||(o.current.availablePackages||[])[0]);
+    if(!pkg)return toast('Pro is not available yet');
+    const r=await RC.purchasePackage({aPackage:pkg});
+    if(r.customerInfo.entitlements.active[PRO_ENTITLEMENT]){closeModal(true);setPro(true);toast('Pro unlocked. Thank you!')}
+  }catch(e){if(!e||!e.userCancelled)toast('Purchase failed')}
+};
+acts.restorepro=async()=>{
+  if(!RC)return toast('Android app only');
+  try{const r=await RC.restorePurchases();const ok=!!r.customerInfo.entitlements.active[PRO_ENTITLEMENT];if(ok){closeModal(true);setPro(true)}toast(ok?'Pro restored':'No purchase found')}catch(e){toast('Restore failed')}
+};
+
+
+/* ---------- crypto ---------- */
+async function deriveKey(pass,salt){
+  const base=await crypto.subtle.importKey('raw',enc.encode(pass),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:250000,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+}
+async function encBuf(key,buf){
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,buf);
+  const out=new Uint8Array(12+ct.byteLength);out.set(iv,0);out.set(new Uint8Array(ct),12);return out.buffer;
+}
+async function decBuf(key,buf){const u=new Uint8Array(buf);return crypto.subtle.decrypt({name:'AES-GCM',iv:u.slice(0,12)},key,u.slice(12))}
+const importDEK=raw=>crypto.subtle.importKey('raw',raw,'AES-GCM',false,['encrypt','decrypt']);
+async function openKey(pass,meta){
+  const kek=await deriveKey(pass,meta.salt);
+  if(meta.wrapped)return importDEK(await decBuf(kek,meta.wrapped));
+  if(dec.decode(await decBuf(kek,meta.check))!=='vault-ok')throw new Error('bad');
+  return kek;
+}
+async function verifyPass(pass){try{await openKey(pass,await kvGet('meta'));return true}catch(e){return false}}
+
+/* ---------- storage (IndexedDB) ---------- */
+const openDB=()=>new Promise((res,rej)=>{const r=indexedDB.open('myvault',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
+const kvGet=k=>new Promise((res,rej)=>{const q=DB.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)});
+const kvSet=(k,v)=>new Promise((res,rej)=>{const t=DB.transaction('kv','readwrite');t.objectStore('kv').put(v,k);t.oncomplete=()=>res();t.onerror=()=>rej(t.error)});
+const kvDel=k=>new Promise((res,rej)=>{const t=DB.transaction('kv','readwrite');t.objectStore('kv').delete(k);t.oncomplete=()=>res();t.onerror=()=>rej(t.error)});
+const kvClear=()=>new Promise((res,rej)=>{const t=DB.transaction('kv','readwrite');t.objectStore('kv').clear();t.oncomplete=()=>res();t.onerror=()=>rej(t.error)});
+let saveQ=Promise.resolve();
+function save(){saveQ=saveQ.then(async()=>{if(!KEY||!S)return;await kvSet('data',await encBuf(KEY,enc.encode(JSON.stringify(S))))}).catch(e=>toast('Save failed: '+e.message));return saveQ}
+
+/* ---------- encrypted files ---------- */
+async function putFile(blob){const id=uid();const buf=await blob.arrayBuffer();await kvSet('f:'+id,{mime:blob.type||'application/octet-stream',buf:await encBuf(KEY,buf)});return id}
+async function fileURL(id){
+  if(urlCache.has(id))return urlCache.get(id);
+  const r=await kvGet('f:'+id);if(!r||!KEY)return null;
+  const buf=await decBuf(KEY,r.buf);const u=URL.createObjectURL(new Blob([buf],{type:r.mime}));urlCache.set(id,u);return u;
+}
+async function delFile(id){await kvDel('f:'+id);const u=urlCache.get(id);if(u){URL.revokeObjectURL(u);urlCache.delete(id)}}
+function hydrate(root=document){
+  $$('img[data-fid]',root).forEach(async el=>{
+    try{const u=await fileURL(el.dataset.fid);if(!u||!el.isConnected)return;el.onload=()=>el.classList.add('loaded');el.src=u}catch(e){}
+  });
+}
+function loadImg(file){return new Promise((res,rej)=>{const u=URL.createObjectURL(file);const im=new Image();im.onload=()=>res({im,u});im.onerror=()=>{URL.revokeObjectURL(u);rej(new Error('img'))};im.src=u})}
+async function shrink(file,max,q){
+  const {im,u}=await loadImg(file);const sc=Math.min(1,max/Math.max(im.width,im.height));
+  const c=document.createElement('canvas');c.width=Math.max(1,Math.round(im.width*sc));c.height=Math.max(1,Math.round(im.height*sc));
+  c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);
+  return new Promise(r=>c.toBlob(r,'image/jpeg',q));
+}
+async function storeUpload(file,max){
+  let blob=file;
+  if(file.type.startsWith('image/')){try{blob=await shrink(file,max||2000,.88)}catch(e){}}
+  const id=await putFile(blob);return{fileId:id,name:file.name||'file',mime:blob.type||file.type||''};
+}
+const blobToB64=b=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]);r.onerror=rej;r.readAsDataURL(b)});
+const safeName=n=>String(n||'file').replace(/[^\w.\- ]/g,'_');
+async function outBlob(blob,name){
+  name=safeName(name);
+  if(NATIVE&&FS&&ShareP){
+    try{
+      noLockUntil=Date.now()+300000;
+      const r=await FS.writeFile({path:name,data:await blobToB64(blob),directory:'CACHE'});
+      await ShareP.share({title:name,url:r.uri,dialogTitle:'Save or share'});
+    }catch(e){const m=String((e&&e.message)||e).toLowerCase();if(!m.includes('cancel'))toast('Could not share: '+((e&&e.message)||e))}
+    return;
+  }
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+}
+async function saveFile(fileId,name){const url=await fileURL(fileId);if(!url)return toast('File not found');await outBlob(await (await fetch(url)).blob(),name)}
+
+/* ---------- biometrics ---------- */
+async function bioAvailable(){if(!Bio)return false;try{const r=await Bio.isAvailable();return !!(r&&r.isAvailable)}catch(e){return false}}
+async function bioPrompt(reason){
+  noLockUntil=Date.now()+60000;
+  await Bio.verifyIdentity({reason:reason||'Unlock My Vault',title:'My Vault',subtitle:'Confirm it is you',description:'Touch the fingerprint sensor',negativeButtonText:'Use passcode',useFallback:false,maxAttempts:3});
+}
+async function bioUnlock(){
+  if(!(Bio&&bioOn))return;
+  const err=$('#err');
+  try{await bioPrompt()}catch(e){return}
+  let pass;
+  try{const c=await Bio.getCredentials({server:BIO_SERVER});pass=c.password}
+  catch(e){bioOn=false;try{await kvSet('bio',false)}catch(_){}renderUnlock(false);const x=$('#err');if(x)x.textContent='Fingerprint unlock was reset. Enter your passcode.';return}
+  const ok=await tryUnlock(pass);
+  if(!ok&&err){err.textContent='Fingerprint unlock is out of date. Enter your passcode.'}
+}
+
+/* ---------- helpers ---------- */
+function toast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2900)}
+function greet(){const h=new Date().getHours();return h<5?'Good night':h<12?'Good morning':h<18?'Good afternoon':'Good evening'}
+function countUp(el,to){const t0=performance.now(),d=1000;const step=t=>{const p=Math.min(1,(t-t0)/d),e=1-Math.pow(1-p,3);el.textContent=p<1?fmt(Math.round(to*e)):fmt(to);if(p<1&&el.isConnected)requestAnimationFrame(step)};requestAnimationFrame(step)}
+function ring(pct,size){
+  const id='rg'+(++rid),r=size/2-9,c=2*Math.PI*r,to=c*(1-Math.max(0,Math.min(100,pct))/100);
+  return `<svg class="ring" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff7966"/><stop offset=".55" stop-color="#ffa699"/><stop offset="1" stop-color="#ad7bff"/></linearGradient></defs><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="9"/><circle class="arc" cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="url(#${id})" stroke-width="9" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${c}" data-to="${to}" transform="rotate(-90 ${size/2} ${size/2})"/><text x="50%" y="52%" text-anchor="middle" dominant-baseline="middle">${Math.round(pct)}%</text></svg>`;
+}
+function gauge(pct,w){
+  const id='gg'+(++rid),R=w*0.42,cx=w/2,cy=R+14,len=Math.PI*R,to=len*(1-Math.max(0,Math.min(100,pct))/100),d=`M${cx-R} ${cy} A${R} ${R} 0 0 1 ${cx+R} ${cy}`;
+  return `<svg class="ring gauge" width="${w}" height="${cy+8}" viewBox="0 0 ${w} ${cy+8}"><defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ff7966"/><stop offset=".6" stop-color="#ffa699"/><stop offset="1" stop-color="#ad7bff"/></linearGradient></defs><path d="${d}" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="8" stroke-linecap="round"/><path class="arc" d="${d}" fill="none" stroke="url(#${id})" stroke-width="8" stroke-linecap="round" stroke-dasharray="${len}" stroke-dashoffset="${len}" data-to="${to}"/></svg>`;
+}
+const logo=(s,spin)=>spin?`<div class="orb"><div class="orb-in">${ic('vault',52)}</div></div>`:`<div class="logo" style="width:${s}px;height:${s}px">${ic('vault',Math.round(s*.58))}</div>`;
+const empty=(i,h,p)=>`<div class="empty card"><div class="eic">${ic(i,30)}</div><h3>${h}</h3><p>${p}</p></div>`;
+const paidOf=d=>(d.payments||[]).reduce((a,p)=>a+Number(p.amount||0),0);
+const remOf=d=>Math.max(0,Number(d.total||0)-paidOf(d));
+function expStatus(exp){
+  if(!exp)return null;
+  const days=Math.ceil((new Date(exp+'T00:00:00')-new Date().setHours(0,0,0,0))/864e5);
+  if(days<0)return{level:'bad',text:'Expired '+(-days)+'d ago',days};
+  if(days<=90)return{level:'warn',text:'Expires in '+days+'d',days};
+  return{level:'ok',text:'Valid until '+fdate(exp),days};
+}
+const last4=s=>{s=String(s||'');return s?'•••• '+s.slice(-4):'—'};
+function strength(v){if(!v)return 0;let s=0;if(v.length>=8)s++;if(v.length>=12)s++;if(/[a-z]/.test(v)&&/[A-Z]/.test(v)&&/\d/.test(v))s++;if(/[^A-Za-z0-9]/.test(v))s++;return Math.max(1,s)}
+function pwHealth(){
+  const items=[...S.emails.map(e=>({p:e.password,mail:1})),...S.banks.filter(b=>b.password).map(b=>({p:b.password}))].filter(x=>x.p);
+  const cnt={};items.forEach(x=>cnt[x.p]=(cnt[x.p]||0)+1);
+  let weak=0,reuse=0;items.forEach(x=>{if(x.mail&&x.p.length<10)weak++;if(cnt[x.p]>1)reuse++});
+  return{total:items.length,weak,reuse};
+}
+function addMonthsLabel(n){const d=new Date();d.setMonth(d.getMonth()+n);return d.toLocaleDateString('en-GB',{month:'short',year:'numeric'})}
+const shortNum=v=>v>=1000?(v/1000).toFixed(v>=10000?0:1).replace(/\.0$/,'')+'k':String(Math.round(v));
+
+/* ---------- form helpers ---------- */
+function fld(label,name,o={}){
+  const t=o.type||'text';
+  if(t==='select')return `<label class="f"><span>${label}</span><select name="${name}">${o.options.map(x=>`<option ${x===o.value?'selected':''}>${esc(x)}</option>`).join('')}</select></label>`;
+  if(t==='textarea')return `<label class="f"><span>${label}</span><textarea name="${name}" rows="3" placeholder="${esc(o.ph||'')}">${esc(o.value||'')}</textarea></label>`;
+  return `<label class="f"><span>${label}</span><input name="${name}" type="${t}" value="${esc(o.value==null?'':o.value)}" placeholder="${esc(o.ph||'')}" ${o.req?'required':''} ${o.step?'step="'+o.step+'"':''} ${o.inputmode?'inputmode="'+o.inputmode+'"':''} ${o.accept?'accept="'+o.accept+'"':''} ${o.multiple?'multiple':''} ${o.min?'minlength="'+o.min+'"':''} autocomplete="off"></label>`;
+}
+const pwfld=(label,name,val,gen,req)=>`<label class="f"><span>${label}</span><div class="pwrow"><input name="${name}" type="password" value="${esc(val||'')}" ${req?'required':''} autocomplete="off">${gen?'<button type="button" class="mini" data-act="gen" title="Generate a strong password">'+ic('dice',17)+'</button>':''}<button type="button" class="mini" data-act="eye" aria-label="Show or hide">${ic('eye',17)}</button></div>${gen?`<div class="meter" data-s="${strength(val)}"><i style="width:${strength(val)*25}%"></i></div>`:''}</label>`;
+const shell=(name,id,inner,label)=>`<form data-form="${name}" ${id?'data-id="'+id+'"':''}>${inner}<button class="btn primary wide" type="submit">${label||'Save'}</button></form>`;
+function openModal(title,body){
+  closeModal(true);
+  const m=document.createElement('div');m.className='modal';
+  m.innerHTML=`<div class="sheet"><div class="grab"></div><div class="sh-head"><h2>${title}</h2><button class="icon-btn sm" data-act="close" aria-label="Close">${ic('x',18)}</button></div><div class="sh-body">${body}</div></div>`;
+  m.addEventListener('click',e=>{if(e.target===m)closeModal()});
+  document.body.appendChild(m);requestAnimationFrame(()=>m.classList.add('open'));hydrate(m);
+}
+function closeModal(now){const m=$('.modal');if(!m)return;if(now){m.remove();return}m.classList.remove('open');setTimeout(()=>m.remove(),260)}
+function closeViewer(){const v=$('.viewer');if(v)v.remove()}
+function openViewer(html){closeViewer();const v=document.createElement('div');v.className='viewer';v.innerHTML=html;document.body.appendChild(v);hydrate(v)}
+
+/* ---------- screens ---------- */
+function fatal(m){$('#app').innerHTML=`<div class="lock">${logo(0,true)}<h2>Can't start</h2><p class="muted">${esc(m)}</p></div>`}
+function renderSetup(){
+  $('#app').innerHTML=`<div class="lock">${logo(0,true)}<h1 class="brand big">My Vault</h1><p class="muted">Create a passcode to lock everything. Your data is encrypted and stays on this device only.</p>
+  <form data-form="setup" class="lock-form"><input type="password" name="p1" placeholder="Create passcode (6+ characters)" minlength="6" required autocomplete="new-password"><input type="password" name="p2" placeholder="Repeat passcode" minlength="6" required autocomplete="new-password">
+  <label class="check"><input type="checkbox" name="ok" required><span>I understand that if I forget this passcode, my data can't be recovered by anyone.</span></label>
+  <button class="btn primary wide" type="submit">Create my vault</button><div class="err" id="err"></div></form></div>`;
+}
+function renderUnlock(auto){
+  const showBio=NATIVE&&bioOn&&bioOK;
+  $('#app').innerHTML=`<div class="lock">${logo(0,true)}<h1 class="brand big">My Vault</h1><p class="muted">Welcome back</p>
+  ${showBio?`<button class="fp" data-act="bio" aria-label="Unlock with fingerprint"><span class="pr"></span><span class="pr p2"></span>${ic('finger',42)}</button><div class="muted sm">Touch to unlock</div>`:''}
+  <form data-form="unlock" class="lock-form"><input type="password" name="p" placeholder="${showBio?'Or enter your passcode':'Passcode'}" required autocomplete="current-password"><button class="btn primary wide" type="submit">Unlock</button><div class="err" id="err"></div></form></div>`;
+  if(showBio&&auto!==false)setTimeout(bioUnlock,450);
+  else if(!showBio)setTimeout(()=>{const i=$('input[name=p]');if(i)i.focus()},300);
+}
+const TABS=[['home','home','Home'],['debts','wallet','Debts'],['docs','idcard','Docs'],['photos','image','Photos'],['vault','key','Vault']];
+function renderApp(){
+  const views={home:vHome,debts:vDebts,docs:vDocs,photos:vPhotos,vault:vVault};
+  $('#app').innerHTML=`<div class="top"><div class="brandrow">${logo(40)}<div><div class="hello">${greet()}</div><h1 class="brand">My Vault</h1></div></div><div class="top-actions">${proBtn()}<button class="icon-btn" data-act="lock" aria-label="Lock now">${ic('lock',19)}</button><button class="icon-btn" data-act="settings" aria-label="Settings">${ic('sliders',19)}</button></div></div>
+  <main class="view">${views[tab]()}</main>
+  <nav class="nav">${TABS.map((t,i)=>(i===2?'<button class="fab" data-act="qadd" aria-label="Add new">'+ic('plus',26)+'</button>':'')+`<button class="${tab===t[0]?'on':''}" data-act="tab" data-k="${t[0]}">${ic(t[1],22)}<span>${t[2]}</span></button>`).join('')}</nav>`;
+  hydrate();
+  if(tab==='home')$('.view').insertAdjacentHTML('beforeend',proCard());
+  syncAds();
+  setTimeout(()=>{
+    $$('.arc').forEach(a=>a.style.strokeDashoffset=a.dataset.to);
+    $$('[data-count]').forEach(el=>countUp(el,+el.dataset.count));
+    $$('.bar>b').forEach(b=>b.style.width=b.dataset.w);
+    $$('.barv i').forEach(b=>b.style.height=b.dataset.h);
+  },40);
+}
+
+/* ---------- views ---------- */
+function payChart(){
+  const months=[],now=new Date();
+  for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push({k:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'),l:d.toLocaleDateString('en-GB',{month:'short'}),v:0})}
+  S.debts.forEach(d=>(d.payments||[]).forEach(p=>{const m=months.find(x=>x.k===(p.date||'').slice(0,7));if(m)m.v+=Number(p.amount||0)}));
+  const max=Math.max(...months.map(m=>m.v),1);
+  return `<div class="chart">${months.map(m=>`<div class="col"><div class="val num">${m.v?shortNum(m.v):''}</div><div class="barv"><i data-h="${m.v?Math.max(6,Math.round(m.v/max*100)):0}%" style="height:0"></i></div><span>${m.l}</span></div>`).join('')}</div>`;
+}
+function vHome(){
+  const tot=S.debts.reduce((a,d)=>a+Number(d.total||0),0),paid=S.debts.reduce((a,d)=>a+paidOf(d),0),rem=Math.max(0,tot-paid),pct=tot?paid/tot*100:0;
+  const monthly=S.debts.filter(d=>remOf(d)>0).reduce((a,d)=>a+Number(d.monthly||0),0);
+  const months=monthly>0&&rem>0?Math.ceil(rem/monthly):null;
+  const ph=pwHealth();
+  const alerts=S.docs.map(d=>({d,s:expStatus(d.expiry)})).filter(x=>x.s&&x.s.level!=='ok');
+  const phTxt=!ph.total?'No logins yet':(ph.weak||ph.reuse)?(ph.weak+ph.reuse)+' to review':'All strong';
+  const phCls=!ph.total?'':(ph.weak||ph.reuse)?'warn':'ok';
+  const bioTxt=NATIVE?(bioOK?(bioOn?'On':'Off'):'Not set up on phone'):'Android app only';
+  return `<div class="card hero" style="--i:0"><div class="gaugewrap">${gauge(pct,260)}<div class="gin"><div class="lbl">Total debt remaining</div><div class="big num" data-count="${rem}">${fmt(0)}</div><span class="pill" style="margin-top:8px;display:inline-block">${Math.round(pct)}% paid</span></div></div>
+  <div class="stats3"><div><span class="lbl">Paid</span><b class="num">${fmt(paid)}</b></div><div><span class="lbl">Monthly</span><b class="num">${monthly?fmt(monthly):'—'}</b></div><div><span class="lbl">Debt-free</span><b>${months?addMonthsLabel(months):'—'}</b></div></div></div>
+  <div class="actions"><button class="act" style="--i:1" data-act="qpay"><span class="chip-ic sm">${ic('plus',18)}</span>Payment</button><button class="act" style="--i:2" data-act="newdoc"><span class="chip-ic sm">${ic('file',18)}</span>Document</button><button class="act" style="--i:3" data-act="newemail"><span class="chip-ic sm">${ic('key',18)}</span>Login</button></div>
+  <div class="tiles"><div class="tile-s" style="--i:3" data-act="tab" data-k="docs"><span class="chip-ic sm">${ic('idcard',18)}</span><b class="num">${S.docs.length}</b><span class="t">Documents</span></div><div class="tile-s" style="--i:4" data-act="tab" data-k="photos"><span class="chip-ic sm pink">${ic('image',18)}</span><b class="num">${S.photos.length}</b><span class="t">Photos</span></div><div class="tile-s" style="--i:5" data-act="tab" data-k="vault"><span class="chip-ic sm ok">${ic('key',18)}</span><b class="num">${S.emails.length+S.banks.length}</b><span class="t">Logins & banks</span></div></div>
+  ${alerts.length?`<div class="sub-head">Needs attention</div>`+alerts.map(x=>`<div class="alert ${x.s.level}"><span class="chip-ic sm ${x.s.level==='bad'?'pink':'warn'}">${ic(x.s.level==='bad'?'alert':'clock',18)}</span><div><b>${esc(x.d.title)}</b><div class="muted sm">${x.s.text} · ${fdate(x.d.expiry)}</div></div></div>`).join(''):''}
+  <div class="card" style="--i:6"><div class="row between"><div class="row" style="gap:12px"><span class="chip-ic sm ok">${ic('shield',18)}</span><div><div class="title" style="font-size:15.5px">Security status</div><div class="muted sm">Everything is sealed on this device</div></div></div></div>
+   <div style="margin-top:10px"><div class="chk"><span class="muted">${ic('lock',17)}</span>AES-256 encryption<span class="v ok">Active</span></div><div class="chk"><span class="muted">${ic('finger',17)}</span>Fingerprint unlock<span class="v ${bioOn&&bioOK?'ok':'muted'}">${bioTxt}</span></div><div class="chk"><span class="muted">${ic('key',17)}</span>Password health<span class="v ${phCls}">${phTxt}</span></div></div></div>
+  <div class="card" style="--i:7"><div class="row between"><div class="row" style="gap:12px"><span class="chip-ic sm">${ic('trend',18)}</span><div><div class="title" style="font-size:15.5px">Payments</div><div class="muted sm">Last 6 months</div></div></div></div>${payChart()}</div>`;
+}
+function debtCard(d,i){
+  const paid=paidOf(d),rem=remOf(d),tot=Number(d.total||0),pct=tot?Math.min(100,paid/tot*100):0;
+  const left=d.monthly>0&&rem>0?Math.ceil(rem/d.monthly):null;
+  const ps=(d.payments||[]).slice().sort((a,b)=>b.date.localeCompare(a.date));
+  return `<div class="card ${rem===0?'done':''}" style="--i:${i+1}">
+  <div class="row between"><div class="row" style="gap:12px;min-width:0"><span class="chip-ic ${rem===0?'ok':''}">${ic(rem===0?'check':'wallet',21)}</span><div style="min-width:0"><div class="title">${esc(d.name)}</div><div class="muted sm">${d.start?'Started '+fdate(d.start):'No start date'}${d.notes?' · '+esc(d.notes):''}</div></div></div>${rem===0?'<span class="badge ok">Cleared</span>':`<span class="badge">${Math.round(pct)}%</span>`}</div>
+  <div class="amt-row"><div><div class="lbl">Remaining</div><div class="amt num">${fmt(rem)}</div></div><div class="r"><div class="lbl">Paid</div><div class="amt ok num">${fmt(paid)}</div></div></div>
+  <div class="bar"><b data-w="${pct}%" style="width:0"></b></div>
+  <div class="meta"><span class="pill">Total ${fmt(tot)}</span>${d.monthly>0?`<span class="pill">${fmt(d.monthly)} / month</span>`:''}${left?`<span class="pill">≈ ${left} month${left>1?'s':''} left</span>`:''}${ps[0]?`<span class="pill">Last paid ${fdate(ps[0].date)}</span>`:''}</div>
+  <div class="row gap"><button class="btn sm primary" data-act="pay" data-id="${d.id}">${ic('plus',16)}Payment</button><button class="btn sm" data-act="hist" data-id="${d.id}">${ic('history',16)}History (${ps.length})</button><button class="btn sm ghost" data-act="editdebt" data-id="${d.id}">${ic('edit',16)}Edit</button></div></div>`;
+}
+function vDebts(){
+  const tot=S.debts.reduce((a,d)=>a+Number(d.total||0),0),paid=S.debts.reduce((a,d)=>a+paidOf(d),0),rem=Math.max(0,tot-paid),pct=tot?paid/tot*100:0;
+  return `<div class="sec-head"><h2>Debts</h2><button class="btn sm primary" data-act="newdebt">${ic('plus',16)}Add debt</button></div>
+  <div class="card hero" style="--i:0"><div class="hero-top"><div><div class="lbl">Total remaining</div><div class="big num" data-count="${rem}">${fmt(0)}</div><div class="muted sm" style="margin-top:6px">Paid ${fmt(paid)} of ${fmt(tot)}</div></div>${ring(pct,92)}</div></div>
+  ${S.debts.map(debtCard).join('')||empty('wallet','No debts yet','Tap “Add debt” to track the name, amount, payments and dates.')}`;
+}
+const DOC_TYPES=['Passport','Visa','ID Card','Driving Licence','Other'];
+const DOC_ICON={'Passport':'book','Visa':'globe','ID Card':'idcard','Driving Licence':'card','Other':'folder'};
+function vDocs(){
+  const list=S.docs.filter(d=>docFilter==='All'||d.type===docFilter);
+  return `<div class="sec-head"><h2>Documents</h2><button class="btn sm primary" data-act="newdoc">${ic('plus',16)}Add</button></div>
+  <div class="search">${ic('search',18)}<input data-search placeholder="Search documents" autocomplete="off"></div>
+  <div class="chips">${['All',...DOC_TYPES].map(t=>`<button class="chip ${docFilter===t?'on':''}" data-act="docfilter" data-t="${t}">${ic(t==='All'?'folder':DOC_ICON[t],15)}${t}</button>`).join('')}</div>
+  ${list.map((d,i)=>{const s=expStatus(d.expiry);return `<div class="card tap" style="--i:${i}" data-act="doc" data-id="${d.id}" data-s="${esc((d.title+' '+d.type+' '+(d.notes||'')).toLowerCase())}"><div class="row" style="gap:14px"><span class="chip-ic">${ic(DOC_ICON[d.type]||'folder',22)}</span><div style="flex:1;min-width:0"><div class="title">${esc(d.title)}</div><div class="muted sm">${esc(d.type)}${d.number?' · '+last4(d.number):''} · ${(d.files||[]).length} file${(d.files||[]).length===1?'':'s'}</div></div>${s?`<span class="badge ${s.level}">${s.level==='ok'?'Valid':s.text}</span>`:''}</div></div>`}).join('')||empty('idcard','No documents here','Store your passport, visa, identity card and more, with photos or PDFs attached.')}`;
+}
+function vPhotos(){
+  const hasPriv=S.photos.some(p=>p.private);
+  return `<div class="sec-head"><h2>Photos</h2><label class="btn sm primary" style="cursor:pointer">${ic('plus',16)}Add photos<input type="file" accept="image/*" multiple hidden data-kind="photos"></label></div>
+  ${hasPriv?`<div class="row between" style="margin-bottom:12px"><span class="muted sm row" style="gap:7px">${ic(photosUnlocked?'unlock':'lock',16)}${photosUnlocked?'Private photos are visible':'Private photos are hidden'}</span><button class="btn sm" data-act="${photosUnlocked?'hidepriv':'unlockpriv'}">${photosUnlocked?'Hide private':'Show private'}</button></div>`:''}
+  ${S.photos.length?`<div class="grid">${S.photos.map((p,i)=>(p.private&&!photosUnlocked)?`<div class="tile locked" style="--i:${i}" data-act="unlockpriv">${ic('lock',28)}</div>`:`<div class="tile" style="--i:${i}" data-act="photo" data-id="${p.id}"><img alt="" data-fid="${p.thumbId}">${p.private?`<span class="pv">${ic('lock',14)}</span>`:''}</div>`).join('')}</div>`:empty('image','No photos yet','Add your personal photos. Mark any as private to hide them behind your passcode.')}`;
+}
+function secret(col,id,field,label){return `<div class="secr"><span class="sl">${label}</span><span class="sv" data-v>••••••••</span><button class="mini" data-act="reveal" data-col="${col}" data-id="${id}" data-field="${field}" aria-label="Show">${ic('eye',16)}</button><button class="mini" data-act="copy" data-col="${col}" data-id="${id}" data-field="${field}" aria-label="Copy">${ic('copy',16)}</button></div>`}
+const kv=(l,v)=>v?`<div class="kv"><span class="sl">${l}</span><span class="sv">${esc(v)}</span></div>`:'';
+const PROVIDERS=['Gmail','Outlook','Yahoo','iCloud','Other'];
+const BTYPES=['Savings','Current','Credit card','Other'];
+function vVault(){
+  const seg=`<div class="seg"><button class="${vaultSeg==='emails'?'on':''}" data-act="seg" data-k="emails">${ic('mail',17)}Emails</button><button class="${vaultSeg==='banks'?'on':''}" data-act="seg" data-k="banks">${ic('bank',17)}Banks</button></div>
+  <div class="search">${ic('search',18)}<input data-search placeholder="Search ${vaultSeg==='emails'?'emails':'banks'}" autocomplete="off"></div>`;
+  if(vaultSeg==='emails')return `<div class="sec-head"><h2>Email logins</h2><button class="btn sm primary" data-act="newemail">${ic('plus',16)}Add</button></div>${seg}
+  ${S.emails.map((e,i)=>`<div class="card" style="--i:${i}" data-s="${esc((e.email+' '+e.provider).toLowerCase())}"><div class="row" style="gap:14px;margin-bottom:8px"><span class="chip-ic">${ic('mail',21)}</span><div style="flex:1;min-width:0"><div class="title" style="word-break:break-all">${esc(e.email)}</div><div class="muted sm">${esc(e.provider)}</div></div></div>${secret('emails',e.id,'password','Password')}${kv('Recovery',e.recovery)}${kv('Notes',e.notes)}<div class="row gap"><button class="btn sm" data-act="editemail" data-id="${e.id}">${ic('edit',16)}Edit</button><button class="btn sm danger" data-act="delemail" data-id="${e.id}">${ic('trash',16)}Delete</button></div></div>`).join('')||empty('mail','No email logins','Save your Gmail and other email accounts with their passwords.')}`;
+  return `<div class="sec-head"><h2>Bank info</h2><button class="btn sm primary" data-act="newbank">${ic('plus',16)}Add</button></div>${seg}
+  ${S.banks.map((b,i)=>`<div class="card" style="--i:${i}" data-s="${esc((b.bank+' '+b.type+' '+(b.holder||'')).toLowerCase())}"><div class="row" style="gap:14px;margin-bottom:8px"><span class="chip-ic">${ic('bank',21)}</span><div style="flex:1;min-width:0"><div class="title">${esc(b.bank)}</div><div class="muted sm">${esc(b.type)}${b.holder?' · '+esc(b.holder):''}</div></div></div>${secret('banks',b.id,'account','Account no.')}${kv('Username',b.username)}${b.password?secret('banks',b.id,'password','Password / PIN'):''}${kv('Notes',b.notes)}<div class="row gap"><button class="btn sm" data-act="editbank" data-id="${b.id}">${ic('edit',16)}Edit</button><button class="btn sm danger" data-act="delbank" data-id="${b.id}">${ic('trash',16)}Delete</button></div></div>`).join('')||empty('bank','No bank info','Save account details so they are always at hand. Avoid storing card CVV codes.')}`;
+}
+
+/* ---------- actions ---------- */
+acts.tab=a=>{if(tab==='photos'&&a.dataset.k!=='photos')photosUnlocked=false;tab=a.dataset.k;renderApp();window.scrollTo({top:0,behavior:'smooth'})};
+acts.lock=()=>lock();
+acts.close=()=>{closeModal();closeViewer()};
+acts.seg=a=>{vaultSeg=a.dataset.k;renderApp()};
+acts.docfilter=a=>{docFilter=a.dataset.t;renderApp()};
+acts.eye=a=>{const i=a.closest('.pwrow').querySelector('input');i.type=i.type==='password'?'text':'password'};
+acts.gen=a=>{const i=a.closest('.pwrow').querySelector('input');const ch='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*';const r=crypto.getRandomValues(new Uint32Array(18));i.value=[...r].map(x=>ch[x%ch.length]).join('');i.type='text';i.dispatchEvent(new Event('input',{bubbles:true}))};
+function getItem(col,id){return S[col].find(x=>x.id===id)}
+acts.reveal=a=>{
+  const span=a.parentElement.querySelector('[data-v]');
+  if(span.dataset.on){span.textContent='••••••••';delete span.dataset.on;return}
+  const it=getItem(a.dataset.col,a.dataset.id);span.textContent=it[a.dataset.field]||'—';span.dataset.on='1';
+  setTimeout(()=>{if(span.isConnected&&span.dataset.on){span.textContent='••••••••';delete span.dataset.on}},10000);
+};
+acts.copy=async a=>{
+  const it=getItem(a.dataset.col,a.dataset.id),v=it[a.dataset.field]||'';if(!v)return toast('Nothing to copy');
+  try{await navigator.clipboard.writeText(v)}catch(e){const t=document.createElement('textarea');t.value=v;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove()}
+  toast('Copied · clipboard clears in 30s');
+  setTimeout(()=>{try{navigator.clipboard.writeText(' ')}catch(e){}},30000);
+};
+acts.qpay=()=>{
+  const open=S.debts.filter(d=>remOf(d)>0);
+  if(!S.debts.length)return acts.newdebt();
+  if(open.length===1)return acts.pay({dataset:{id:open[0].id}});
+  tab='debts';renderApp();toast('Tap “Payment” on the debt you paid');
+};
+acts.bio=()=>bioUnlock();
+acts.qadd=()=>openModal('Add new',`<div class="qgrid">${[['wallet','Payment','qpay'],['idcard','Document','newdoc'],['key','Email login','newemail'],['bank','Bank','newbank']].map(x=>`<button class="qa" data-act="qgo" data-to="${x[2]}"><span class="chip-ic">${ic(x[0],22)}</span>${x[1]}</button>`).join('')}</div>`);
+acts.qgo=a=>{closeModal(true);acts[a.dataset.to](a)};
+
+/* debts */
+function debtForm(d){d=d||{};return shell('debt',d.id,fld('Debt name','name',{value:d.name,req:1,ph:'e.g. Personal loan'})+fld('Total amount','total',{type:'number',value:d.total,req:1,step:'0.01',inputmode:'decimal'})+fld('Monthly payment (optional)','monthly',{type:'number',value:d.monthly,step:'0.01',inputmode:'decimal'})+fld('Start date','start',{type:'date',value:d.start})+fld('Notes','notes',{type:'textarea',value:d.notes,ph:'Who you owe, terms…'})+(d.id?`<button type="button" class="btn danger wide" data-act="deldebt" data-id="${d.id}">${ic('trash',16)}Delete this debt</button>`:''),'Save debt')}
+acts.newdebt=()=>openModal('Add debt',debtForm());
+acts.editdebt=a=>openModal('Edit debt',debtForm(getItem('debts',a.dataset.id)));
+acts.deldebt=async a=>{if(!confirm('Delete this debt and all its payments?'))return;S.debts=S.debts.filter(d=>d.id!==a.dataset.id);await save();closeModal();renderApp()};
+forms.debt=async(fd,f)=>{const o={name:fd.name.trim(),total:+fd.total||0,monthly:+fd.monthly||0,start:fd.start||'',notes:fd.notes||''};if(f.dataset.id)Object.assign(getItem('debts',f.dataset.id),o);else S.debts.push(Object.assign({id:uid(),payments:[]},o));await save();closeModal();renderApp();toast('Debt saved')};
+acts.pay=a=>{const d=getItem('debts',a.dataset.id);openModal('Add payment · '+esc(d.name),shell('pay',d.id,`<div class="muted sm" style="margin-bottom:10px">Remaining now: <b>${fmt(remOf(d))}</b></div>`+fld('Amount paid','amount',{type:'number',value:d.monthly||'',req:1,step:'0.01',inputmode:'decimal'})+fld('Date','date',{type:'date',value:todayStr(),req:1})+fld('Note (optional)','note',{}),'Record payment'))};
+forms.pay=async(fd,f)=>{const d=getItem('debts',f.dataset.id);d.payments=d.payments||[];d.payments.push({id:uid(),amount:+fd.amount||0,date:fd.date||todayStr(),note:fd.note||''});await save();closeModal();renderApp();toast(remOf(d)===0?'Debt cleared!':'Payment recorded')};
+acts.hist=a=>{const d=getItem('debts',a.dataset.id);const ps=(d.payments||[]).slice().sort((x,y)=>y.date.localeCompare(x.date));openModal('History · '+esc(d.name),ps.length?`<div class="list">${ps.map(p=>`<div class="li"><div><b class="num">${fmt(p.amount)}</b><div class="muted sm">${fdate(p.date)}${p.note?' · '+esc(p.note):''}</div></div><button class="mini bad" data-act="delpay" data-id="${d.id}" data-pid="${p.id}" aria-label="Delete payment">${ic('trash',16)}</button></div>`).join('')}</div>`:'<p class="muted">No payments yet.</p>')};
+acts.delpay=async a=>{if(!confirm('Delete this payment?'))return;const d=getItem('debts',a.dataset.id);d.payments=d.payments.filter(p=>p.id!==a.dataset.pid);await save();renderApp();acts.hist({dataset:{id:d.id}})};
+
+/* documents */
+function docForm(d){d=d||{};return shell('doc',d.id,fld('Type','type',{type:'select',options:DOC_TYPES,value:d.type||'Passport'})+fld('Title','title',{value:d.title,req:1,ph:'e.g. My passport'})+fld('Document number','number',{value:d.number,ph:'Optional'})+fld('Expiry date','expiry',{type:'date',value:d.expiry})+fld('Notes','notes',{type:'textarea',value:d.notes})+fld('Attach photos or PDFs','files',{type:'file',accept:'image/*,application/pdf',multiple:1}),'Save document')}
+acts.newdoc=()=>openModal('Add document',docForm());
+acts.editdoc=a=>openModal('Edit document',docForm(getItem('docs',a.dataset.id)));
+forms.doc=async(fd,f,raw)=>{
+  const btn=f.querySelector('[type=submit]');btn.disabled=true;btn.textContent='Encrypting…';
+  try{
+    const files=raw.getAll('files').filter(x=>x&&x.size);const att=[];
+    for(const file of files){if(file.size>25*1024*1024){toast('Skipped '+file.name+' (over 25MB)');continue}att.push(await storeUpload(file,2000))}
+    const o={type:fd.type,title:fd.title.trim(),number:fd.number||'',expiry:fd.expiry||'',notes:fd.notes||''};
+    if(f.dataset.id){const d=getItem('docs',f.dataset.id);Object.assign(d,o);d.files=(d.files||[]).concat(att)}else S.docs.push(Object.assign({id:uid(),files:att},o));
+    await save();closeModal();renderApp();toast('Document saved');
+  }catch(e){toast('Could not save: '+e.message);btn.disabled=false;btn.textContent='Save document'}
+};
+acts.doc=a=>{
+  const d=getItem('docs',a.dataset.id),s=expStatus(d.expiry);
+  openModal(esc(d.title),`<div class="row" style="gap:12px;margin-bottom:6px"><span class="chip-ic">${ic(DOC_ICON[d.type]||'folder',22)}</span><div><div class="title">${esc(d.type)}</div>${s?`<span class="badge ${s.level}">${s.text}</span>`:''}</div></div>
+  ${d.number?secret('docs',d.id,'number','Number'):''}${kv('Expiry',d.expiry?fdate(d.expiry):'')}${kv('Notes',d.notes)}
+  <div class="lbl" style="margin-top:14px">Attachments</div>
+  <div class="atts">${(d.files||[]).map(x=>`<div class="att" data-act="view" data-fid="${x.fileId}" data-name="${esc(x.name)}" data-mime="${esc(x.mime)}">${x.mime.startsWith('image/')?`<img alt="" data-fid="${x.fileId}">`:ic('file',26)+'<span>'+esc(x.name)+'</span>'}<button class="x" data-act="delfile" data-id="${d.id}" data-fid="${x.fileId}" aria-label="Remove file">${ic('x',13)}</button></div>`).join('')||'<span class="muted sm">No files attached yet.</span>'}</div>
+  <div class="row gap"><button class="btn sm" data-act="editdoc" data-id="${d.id}">${ic('edit',16)}Edit / add files</button><button class="btn sm danger" data-act="deldoc" data-id="${d.id}">${ic('trash',16)}Delete</button></div>`);
+};
+acts.view=a=>{
+  const img=a.dataset.mime.startsWith('image/');
+  openViewer(`<div class="vt"><span class="muted sm">${esc(a.dataset.name)}</span><button class="icon-btn" data-act="close" aria-label="Close">${ic('x',19)}</button></div><div class="vb">${img?`<img alt="" data-fid="${a.dataset.fid}">`:`<div class="empty"><div class="eic">${ic('file',30)}</div><h3>${esc(a.dataset.name)}</h3></div>`}</div><div class="vf"><button class="btn primary" data-act="savefile" data-fid="${a.dataset.fid}" data-name="${esc(a.dataset.name)}">${ic('share',17)}${img?'Save / share':'Open / share'}</button></div>`);
+};
+acts.savefile=a=>saveFile(a.dataset.fid,a.dataset.name);
+acts.delfile=async a=>{
+  if(!confirm('Remove this file?'))return;
+  const d=getItem('docs',a.dataset.id);d.files=d.files.filter(x=>x.fileId!==a.dataset.fid);await delFile(a.dataset.fid);await save();renderApp();acts.doc({dataset:{id:d.id}});
+};
+acts.deldoc=async a=>{
+  if(!confirm('Delete this document and its files?'))return;
+  const d=getItem('docs',a.dataset.id);for(const x of d.files||[])await delFile(x.fileId);
+  S.docs=S.docs.filter(x=>x.id!==d.id);await save();closeModal();renderApp();
+};
+
+/* photos */
+document.addEventListener('change',async e=>{
+  const t=e.target;if(!t.matches||!t.matches('input[data-kind=photos]'))return;
+  const files=[...t.files].filter(f=>f.type.startsWith('image/'));if(!files.length)return;
+  let n=0;
+  for(const f of files){
+    n++;toast('Encrypting photo '+n+' of '+files.length+'…');
+    try{
+      const main=await shrink(f,2200,.88),thumb=await shrink(f,420,.8);
+      S.photos.unshift({id:uid(),fileId:await putFile(main),thumbId:await putFile(thumb),private:false,added:todayStr(),name:f.name});
+    }catch(err){toast('Could not add '+f.name)}
+  }
+  t.value='';await save();renderApp();toast('Photos added');
+});
+acts.unlockpriv=()=>openModal('Show private photos',shell('verify',null,`<p class="muted sm" style="margin-bottom:12px">Enter your passcode to reveal private photos.</p><label class="f"><span>Passcode</span><input type="password" name="p" required autocomplete="current-password"></label>`,'Reveal'));
+acts.hidepriv=()=>{photosUnlocked=false;renderApp()};
+forms.verify=async(fd,f)=>{
+  const btn=f.querySelector('[type=submit]');btn.disabled=true;btn.textContent='Checking…';
+  if(await verifyPass(fd.p)){photosUnlocked=true;closeModal();renderApp();toast('Private photos visible')}
+  else{toast('Wrong passcode');btn.disabled=false;btn.textContent='Reveal'}
+};
+const visiblePhotos=()=>S.photos.filter(p=>!p.private||photosUnlocked);
+acts.photo=a=>{
+  const list=visiblePhotos(),i=list.findIndex(p=>p.id===a.dataset.id);if(i<0)return;const p=list[i];
+  const prev=list[i-1],next=list[i+1];
+  openViewer(`<div class="vt"><span class="muted sm">${fdate(p.added)} · ${i+1} / ${list.length}</span><button class="icon-btn" data-act="close" aria-label="Close">${ic('x',19)}</button></div>
+  <div class="vb">${prev?`<button class="icon-btn" data-act="photo" data-id="${prev.id}" aria-label="Previous">${ic('left',20)}</button>`:'<span style="width:42px"></span>'}<img alt="" data-fid="${p.fileId}">${next?`<button class="icon-btn" data-act="photo" data-id="${next.id}" aria-label="Next">${ic('right',20)}</button>`:'<span style="width:42px"></span>'}</div>
+  <div class="vf"><button class="btn" data-act="togglepriv" data-id="${p.id}">${ic(p.private?'unlock':'lock',17)}${p.private?'Make public':'Make private'}</button><button class="btn" data-act="savefile" data-fid="${p.fileId}" data-name="${esc(p.name||'photo.jpg')}">${ic('share',17)}Save / share</button><button class="btn danger" data-act="delphoto" data-id="${p.id}">${ic('trash',17)}Delete</button></div>`);
+};
+acts.togglepriv=async a=>{const p=getItem('photos',a.dataset.id);p.private=!p.private;await save();closeViewer();renderApp();toast(p.private?'Photo is now private':'Photo is now public')};
+acts.delphoto=async a=>{if(!confirm('Delete this photo?'))return;const p=getItem('photos',a.dataset.id);await delFile(p.fileId);await delFile(p.thumbId);S.photos=S.photos.filter(x=>x.id!==p.id);await save();closeViewer();renderApp()};
+
+/* emails */
+function emailForm(e){e=e||{};return shell('email',e.id,fld('Provider','provider',{type:'select',options:PROVIDERS,value:e.provider||'Gmail'})+fld('Email address','email',{type:'email',value:e.email,req:1})+pwfld('Password','password',e.password,true)+fld('Recovery email / phone','recovery',{value:e.recovery})+fld('Notes','notes',{type:'textarea',value:e.notes,ph:'2-step verification, backup codes location…'}),'Save login')}
+acts.newemail=()=>openModal('Add email login',emailForm());
+acts.editemail=a=>openModal('Edit email login',emailForm(getItem('emails',a.dataset.id)));
+acts.delemail=async a=>{if(!confirm('Delete this login?'))return;S.emails=S.emails.filter(x=>x.id!==a.dataset.id);await save();renderApp()};
+forms.email=async(fd,f)=>{const o={provider:fd.provider,email:fd.email.trim(),password:fd.password||'',recovery:fd.recovery||'',notes:fd.notes||''};if(f.dataset.id)Object.assign(getItem('emails',f.dataset.id),o);else S.emails.push(Object.assign({id:uid()},o));await save();closeModal();vaultSeg='emails';tab='vault';renderApp();toast('Login saved')};
+
+/* banks */
+function bankForm(b){b=b||{};return shell('bank',b.id,fld('Bank name','bank',{value:b.bank,req:1,ph:'e.g. Maybank'})+fld('Account type','type',{type:'select',options:BTYPES,value:b.type||'Savings'})+fld('Account holder','holder',{value:b.holder})+fld('Account number','account',{value:b.account,inputmode:'numeric'})+fld('Online banking username','username',{value:b.username})+pwfld('Password / PIN','password',b.password,false)+fld('Notes','notes',{type:'textarea',value:b.notes}),'Save bank')}
+acts.newbank=()=>openModal('Add bank',bankForm());
+acts.editbank=a=>openModal('Edit bank',bankForm(getItem('banks',a.dataset.id)));
+acts.delbank=async a=>{if(!confirm('Delete this bank entry?'))return;S.banks=S.banks.filter(x=>x.id!==a.dataset.id);await save();renderApp()};
+forms.bank=async(fd,f)=>{const o={bank:fd.bank.trim(),type:fd.type,holder:fd.holder||'',account:fd.account||'',username:fd.username||'',password:fd.password||'',notes:fd.notes||''};if(f.dataset.id)Object.assign(getItem('banks',f.dataset.id),o);else S.banks.push(Object.assign({id:uid()},o));await save();closeModal();vaultSeg='banks';tab='vault';renderApp();toast('Bank saved')};
+
+/* settings, security, backup */
+const srow=(i,t,s,right)=>`<div class="srow"><span class="chip-ic sm">${ic(i,18)}</span><div class="st"><b>${t}</b><span>${s}</span></div>${right||''}</div>`;
+const BG_OPTS=[['Immediately',0],['15 seconds',15],['30 seconds',30],['1 minute',60],['5 minutes',300]];
+acts.settings=()=>{
+  let bioRow;
+  if(!NATIVE)bioRow=srow('finger','Fingerprint unlock','Available in the Android app');
+  else if(!bioOK)bioRow=srow('finger','Fingerprint unlock','Add a fingerprint in your phone settings first');
+  else bioRow=srow('finger','Fingerprint unlock',bioOn?'On · opens the vault with your finger':'Off',bioOn?`<button class="btn sm danger" data-act="biooff">Turn off</button>`:`<button class="btn sm primary" data-act="bioon">Turn on</button>`);
+  const bg=BG_OPTS.find(o=>o[1]===S.settings.bglock)||BG_OPTS[2];
+  openModal('Settings',`<div class="sub-head" style="margin-top:0">Security</div><div class="group">${bioRow}${srow('key','Passcode','Change the passcode that protects your vault',`<button class="btn sm" data-act="chpass">Change</button>`)}</div>
+  ${shell('settings',null,fld('Lock after being idle','autolock',{type:'select',options:['1 min','3 min','5 min','10 min'],value:S.settings.autolock+' min'})+fld('Lock when app is in background','bglock',{type:'select',options:BG_OPTS.map(o=>o[0]),value:bg[0]})+fld('Currency label','currency',{value:S.settings.currency}),'Save preferences')}
+  <div class="sub-head">Backup</div><div class="group">${srow('share','Encrypted backup','Only opens with your passcode. Photos make it large.',`<button class="btn sm" data-act="export">Export</button>`)}${srow('up','Restore backup','Replaces everything in this vault',`<label class="btn sm" style="cursor:pointer">Import<input type="file" accept="application/json,.json" hidden data-kind="import"></label>`)}</div>
+  <div class="sub-head">Danger zone</div><button class="btn danger wide" data-act="erase">${ic('trash',17)}Erase everything</button>`);
+};
+forms.settings=async fd=>{S.settings.currency=(fd.currency||'RM').trim()||'RM';S.settings.autolock=parseInt(fd.autolock,10)||3;const o=BG_OPTS.find(x=>x[0]===fd.bglock);S.settings.bglock=o?o[1]:30;await save();closeModal();poke();renderApp();toast('Preferences saved')};
+acts.bioon=()=>openModal('Turn on fingerprint',shell('bioon',null,`<p class="muted sm" style="margin-bottom:12px">Enter your passcode once. It is then kept in the phone's secure keystore and released only after your fingerprint.</p><label class="f"><span>Passcode</span><input type="password" name="p" required autocomplete="current-password"></label>`,'Continue'));
+forms.bioon=async(fd,f)=>{
+  const btn=f.querySelector('[type=submit]');btn.disabled=true;btn.textContent='Checking…';
+  try{
+    if(!(await verifyPass(fd.p)))throw new Error('Wrong passcode');
+    await bioPrompt('Confirm your fingerprint to turn this on');
+    await Bio.setCredentials({username:'vault',password:fd.p,server:BIO_SERVER});
+    await kvSet('bio',true);bioOn=true;closeModal();renderApp();toast('Fingerprint unlock is on');
+  }catch(e){toast(e&&e.message?e.message:'Could not turn on fingerprint');btn.disabled=false;btn.textContent='Continue'}
+};
+acts.biooff=async()=>{try{await Bio.deleteCredentials({server:BIO_SERVER})}catch(e){}await kvSet('bio',false);bioOn=false;closeModal();renderApp();toast('Fingerprint unlock is off')};
+acts.chpass=()=>openModal('Change passcode',shell('chpass',null,fld('Current passcode','o',{type:'password',req:1})+fld('New passcode','n1',{type:'password',req:1,min:6})+fld('Repeat new passcode','n2',{type:'password',req:1,min:6}),'Change passcode'));
+forms.chpass=async(fd,f)=>{
+  const btn=f.querySelector('[type=submit]');
+  if(fd.n1!==fd.n2)return toast('New passcodes do not match');
+  btn.disabled=true;btn.textContent='Updating…';
+  try{
+    const meta=await kvGet('meta');if(!meta.wrapped)throw new Error('This older vault cannot change passcode');
+    let raw;try{raw=await decBuf(await deriveKey(fd.o,meta.salt),meta.wrapped)}catch(e){throw new Error('Current passcode is wrong')}
+    const salt=crypto.getRandomValues(new Uint8Array(16));
+    await kvSet('meta',{v:2,salt,wrapped:await encBuf(await deriveKey(fd.n1,salt),raw)});
+    if(bioOn&&Bio){try{await Bio.setCredentials({username:'vault',password:fd.n1,server:BIO_SERVER})}catch(e){bioOn=false;await kvSet('bio',false)}}
+    closeModal();toast('Passcode changed');
+  }catch(e){toast(e.message);btn.disabled=false;btn.textContent='Change passcode'}
+};
+const toB64=buf=>{const u=new Uint8Array(buf);let s='';for(let i=0;i<u.length;i+=0x8000)s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(s)};
+const fromB64=b=>{const s=atob(b),u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u.buffer};
+function pack(v){
+  if(v instanceof ArrayBuffer)return{__b64:toB64(v),t:'ab'};
+  if(v instanceof Uint8Array)return{__b64:toB64(v.buffer.slice(v.byteOffset,v.byteOffset+v.byteLength)),t:'u8'};
+  if(v&&typeof v==='object'){const o={};for(const k in v)o[k]=pack(v[k]);return o}
+  return v;
+}
+function unpack(v){
+  if(v&&typeof v==='object'){if(v.__b64!==undefined){const b=fromB64(v.__b64);return v.t==='u8'?new Uint8Array(b):b}const o={};for(const k in v)o[k]=unpack(v[k]);return o}
+  return v;
+}
+acts.export=async()=>{
+  toast('Preparing backup…');
+  const items={};
+  await new Promise((res,rej)=>{const rq=DB.transaction('kv').objectStore('kv').openCursor();rq.onsuccess=()=>{const c=rq.result;if(c){if(c.key!=='bio')items[c.key]=pack(c.value);c.continue()}else res()};rq.onerror=()=>rej(rq.error)});
+  const blob=new Blob([JSON.stringify({app:'my-vault',v:1,items})],{type:'application/json'});
+  await outBlob(blob,'my-vault-backup-'+todayStr()+'.json');
+};
+document.addEventListener('change',async e=>{
+  const t=e.target;if(!t.matches||!t.matches('input[data-kind=import]'))return;
+  const file=t.files[0];if(!file)return;
+  try{
+    const j=JSON.parse(await file.text());if(j.app!=='my-vault'||!j.items||!j.items.meta)throw new Error('Not a vault backup');
+    if(!confirm('Replace everything in this vault with the backup? You will unlock it with the backup passcode.'))return;
+    await kvClear();for(const k in j.items)await kvSet(k,unpack(j.items[k]));
+    if(bioOn&&Bio){try{await Bio.deleteCredentials({server:BIO_SERVER})}catch(err){}}
+    bioOn=false;lock();toast('Backup restored. Unlock with its passcode.');
+  }catch(err){toast('Import failed: '+err.message)}
+});
+acts.erase=()=>openModal('Erase everything',shell('erase',null,`<p class="muted sm" style="margin-bottom:12px">This permanently deletes all debts, documents, photos and logins on this device. Type <b>ERASE</b> to confirm.</p><input name="w" required autocomplete="off">`,'Erase forever'));
+forms.erase=async fd=>{
+  if((fd.w||'').trim()!=='ERASE')return toast('Type ERASE exactly');
+  await kvClear();if(Bio){try{await Bio.deleteCredentials({server:BIO_SERVER})}catch(e){}}
+  bioOn=false;lock(true);toast('Vault erased');
+};
+
+/* ---------- lock / unlock / boot ---------- */
+function lock(fresh){
+  hideAds();KEY=null;S=null;photosUnlocked=false;clearTimeout(idleTimer);
+  urlCache.forEach(u=>URL.revokeObjectURL(u));urlCache.clear();closeModal(true);closeViewer();
+  tab='home';
+  kvGet('meta').then(m=>m&&!fresh?renderUnlock():renderSetup());
+}
+function poke(){clearTimeout(idleTimer);if(KEY)idleTimer=setTimeout(()=>lock(),((S&&S.settings.autolock)||3)*60000)}
+['pointerdown','keydown','touchstart','scroll'].forEach(ev=>addEventListener(ev,poke,{passive:true,capture:true}));
+document.addEventListener('click',e=>{if(e.target&&e.target.type==='file')noLockUntil=Date.now()+300000},true);
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){hiddenAt=Date.now();return}
+  if(!KEY||!hiddenAt||Date.now()<noLockUntil)return;
+  const bg=(S&&S.settings&&S.settings.bglock!=null)?S.settings.bglock:30;
+  if(Date.now()-hiddenAt>=bg*1000)lock();
+});
+async function tryUnlock(pass){
+  try{
+    const meta=await kvGet('meta');KEY=await openKey(pass,meta);
+    const d=await kvGet('data');
+    S=Object.assign(defaults(),d?JSON.parse(dec.decode(await decBuf(KEY,d))):{});
+    S.settings=Object.assign(defaults().settings,S.settings||{});
+    enter();return true;
+  }catch(e){KEY=null;S=null;return false}
+}
+forms.setup=async(fd,f)=>{
+  const err=$('#err');
+  if(fd.p1!==fd.p2){err.textContent='Passcodes do not match';f.classList.remove('shake');void f.offsetWidth;f.classList.add('shake');return}
+  const btn=f.querySelector('[type=submit]');btn.disabled=true;btn.textContent='Securing…';
+  const salt=crypto.getRandomValues(new Uint8Array(16)),raw=crypto.getRandomValues(new Uint8Array(32));
+  const kek=await deriveKey(fd.p1,salt);
+  await kvSet('meta',{v:2,salt,wrapped:await encBuf(kek,raw)});
+  KEY=await importDEK(raw);S=defaults();await save();enter();
+};
+forms.unlock=async(fd,f)=>{
+  const btn=f.querySelector('[type=submit]');btn.disabled=true;btn.textContent='Unlocking…';
+  if(!(await tryUnlock(fd.p))){
+    $('#err').textContent='Wrong passcode. Try again.';btn.disabled=false;btn.textContent='Unlock';
+    f.classList.remove('shake');void f.offsetWidth;f.classList.add('shake');const i=f.querySelector('input');i.value='';i.focus();
+  }
+};
+let monoStarted=false;
+function startMonetize(){if(monoStarted)return;monoStarted=true;try{initMonetize().catch(()=>{})}catch(e){}}
+function enter(){tab='home';poke();renderApp();startMonetize()}
+
+document.addEventListener('click',e=>{const a=e.target.closest('[data-act]');if(!a)return;const fn=acts[a.dataset.act];if(fn){if(a.tagName==='BUTTON')e.preventDefault();fn(a,e)}});
+document.addEventListener('submit',e=>{
+  const f=e.target.closest('form[data-form]');if(!f)return;e.preventDefault();
+  const h=forms[f.dataset.form];if(!h)return;const raw=new FormData(f);
+  Promise.resolve(h(Object.fromEntries([...raw.entries()].filter(([k,v])=>typeof v==='string')),f,raw)).catch(err=>{toast('Error: '+err.message);const b=f.querySelector('[type=submit]');if(b)b.disabled=false});
+});
+document.addEventListener('input',e=>{
+  const t=e.target;if(!t||!t.matches)return;
+  if(t.matches('[data-search]')){const q=t.value.trim().toLowerCase();$$('.view [data-s]').forEach(c=>c.classList.toggle('hide',!!q&&!c.dataset.s.includes(q)));return}
+  if(t.closest('.pwrow')){const lab=t.closest('label'),m=lab&&lab.querySelector('.meter');if(m){const s=strength(t.value);m.dataset.s=s;m.firstElementChild.style.width=(s*25)+'%'}}
+});
+window.addEventListener('error',e=>toast('Error: '+e.message));
+
+if(AppP){
+  AppP.addListener('backButton',()=>{
+    if($('.viewer')){closeViewer();return}
+    if($('.modal')){closeModal();return}
+    if(KEY&&tab!=='home'){acts.tab({dataset:{k:'home'}});return}
+    AppP.exitApp();
+  });
+}
+if(SB){try{SB.setStyle({style:'DARK'});SB.setBackgroundColor({color:'#0e0e12'})}catch(e){}}
+
+const splashDone=new Promise(res=>{const el=document.getElementById('splash');let d=false;const end=()=>{if(d)return;d=true;el.classList.add('out');setTimeout(()=>{el.remove();res()},500)};setTimeout(end,4600);el.addEventListener('click',end)});
+(async function boot(){
+  if(!window.crypto||!crypto.subtle)return fatal('This browser does not support secure encryption here. Open the file in Chrome, or use the Android app.');
+  try{DB=await openDB()}catch(e){return fatal('This browser is blocking private storage. Turn off private/incognito mode and try again.')}
+  bioOn=!!(await kvGet('bio'));
+  if(NATIVE){bioOK=await bioAvailable();if(!bioOK)bioOn=false}
+  const meta=await kvGet('meta');await splashDone;meta?renderUnlock():renderSetup();
+})();
+</script>
+</body>
+</html>

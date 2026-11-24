@@ -1,1 +1,74 @@
+name: Build My Vault APK
 
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      # Keeps the same signing key between builds so new APKs install over the old one
+      - name: Restore signing key
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: myvault-signing-key-v1
+
+      - name: Create Capacitor project
+        run: |
+          mkdir -p app/www
+          cp index.html app/www/index.html
+          cd app
+          npm init -y
+          npm install --legacy-peer-deps \
+            @capacitor/core@7 @capacitor/cli@7 @capacitor/android@7 \
+            @capacitor/app@7 @capacitor/filesystem@7 @capacitor/share@7 \
+            @capacitor/status-bar@7 @capgo/capacitor-native-biometric@7
+          cat > capacitor.config.json <<'EOF'
+          {
+            "appId": "com.myvault.app",
+            "appName": "My Vault",
+            "webDir": "www",
+            "backgroundColor": "#070a1a"
+          }
+          EOF
+          npx cap add android
+          npx cap sync android
+          sed -i 's#</manifest>#    <uses-permission android:name="android.permission.USE_BIOMETRIC" />\n</manifest>#' android/app/src/main/AndroidManifest.xml
+
+      - name: Build APK
+        working-directory: app/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Rename APK
+        run: cp app/android/app/build/outputs/apk/debug/app-debug.apk MyVault.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MyVault-apk
+          path: MyVault.apk
+
+      - name: Publish release (easy phone download)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: My Vault build ${{ github.run_number }}
+          files: MyVault.apk
